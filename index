@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDANA JHEP — Buku Tunai, Peruntukan & Tracking Aktiviti (Tahun & Sesi)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .excel-table th {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.03em;
+            border: 1px solid #334155;
+        }
+        .excel-table td {
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+        }
+        .excel-input {
+            background: #fffbeb;
+            border: 1px dashed #f59e0b;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-weight: 700;
+            color: #0f172a;
+            width: 135px;
+            text-align: right;
+        }
+        .excel-input:focus {
+            outline: 2px solid #0d9488;
+            background: #ffffff;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden antialiased">
+
+<!-- ================= LOGIN MODAL ================= -->
+<div id="loginModal" class="fixed inset-0 bg-slate-900/90 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+        <div class="bg-slate-900 p-5 text-white text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-teal-500 text-white mb-2 shadow">
+                <i class="fa-solid fa-table-cells text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold">IDANA JHEP (iJejak Dana)</h1>
+            <p class="text-xs text-slate-300 mt-0.5">Sistem Pemantauan Peruntukan Berasaskan Tahun, Sesi & Jabatan</p>
+        </div>
+        <div class="p-6 space-y-4 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 mb-1.5">Pilih Peranan Pengguna</label>
+                <select id="roleSelectInput" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-semibold focus:border-teal-600 focus:outline-none">
+                    <option value="ADMIN">Super Admin / Kewangan JHEP (Boleh Taip Dana Masuk & Urus Tab)</option>
+                    <option value="STAF">Staf / Penyelaras Unit (Rekod Aktiviti, Sesi & Muat Naik)</option>
+                </select>
+            </div>
+            <button onclick="applyRoleLogin()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition">
+                Teruskan ke Sistem
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TOP HEADER BAR ================= -->
+<header class="bg-slate-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700 shrink-0 no-print">
+    <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center text-slate-950 font-black shadow">
+            <i class="fa-solid fa-file-excel text-lg"></i>
+        </div>
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="font-extrabold text-sm sm:text-base tracking-tight">IDANA JHEP — BUKU TUNAI & TRACKING AKTIVITI</h1>
+                <span class="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold">Tahun & Sesi</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Jabatan Hal Ehwal Pelajar (JHEP) · Penapisan Mengikut Tahun, Sesi & Jabatan</p>
+        </div>
+    </div>
+
+    <!-- Top Per-Fund Separate Pills -->
+    <div id="topSeparateFundsBar" class="hidden xl:flex items-center gap-2 bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700 text-xs overflow-x-auto max-w-xl"></div>
+
+    <!-- Right Controls -->
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <button onclick="openGoogleSheetSetupModal()" id="cloudSyncHeaderBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition" title="Tetapan & Sync Automatik Google Sheet (1ntxRdA5Y9a9Uq8PdMb5_9utqjXMrzHqXFFlP0uo47VQ)">
+            <i id="cloudSyncIcon" class="fa-solid fa-cloud-arrow-up"></i>
+            <span id="cloudSyncStatusText" class="hidden md:inline">Google Sheet Sync</span>
+        </button>
+        <button onclick="openDropdownCrudModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition" title="Tambah, Edit atau Padam senarai Tahun, Sesi, Unit & Status">
+            <i class="fa-solid fa-sliders"></i> <span class="hidden sm:inline">Dropdown</span>
+        </button>
+        <button onclick="openSheetCrudModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-folder-plus"></i> <span class="hidden sm:inline">Tab Sheet</span>
+        </button>
+        <button onclick="openExportReportModal()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-export"></i> <span class="hidden sm:inline">Eksport</span>
+        </button>
+        <button onclick="openLoginModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+            <span id="currentRoleBadge" class="px-1.5 py-0.5 rounded bg-teal-500 text-slate-950 font-extrabold text-[10px]">ADMIN</span>
+            <span id="currentUserName" class="font-semibold text-slate-200 hidden sm:inline">Super Admin</span>
+            <i class="fa-solid fa-repeat text-slate-400 text-[10px]"></i>
+        </button>
+    </div>
+</header>
+
+<!-- ================= FORMULA & FILTER BAR ================= -->
+<div class="bg-white border-b border-slate-300 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0 no-print">
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-mono font-bold text-[11px]">FILTER</span>
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <select id="globalFilterYear" onchange="renderAllSheets()" class="border border-slate-300 rounded px-2 py-1 bg-slate-50 font-semibold"></select>
+            <select id="globalFilterSession" onchange="renderAllSheets()" class="border border-slate-300 rounded px-2 py-1 bg-slate-50 font-semibold"></select>
+            <select id="globalFilterUnit" onchange="renderAllSheets()" class="border border-slate-300 rounded px-2 py-1 bg-slate-50 font-semibold max-w-[160px] sm:max-w-[200px]"></select>
+            <button onclick="openDropdownCrudModal()" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded font-bold flex items-center gap-1 transition" title="Edit senarai pilihan dropdown">
+                <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Edit Pilihan</span>
+            </button>
+        </div>
+    </div>
+    <div class="flex items-center gap-2">
+        <button onclick="syncFromGoogleSheet(true)" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 transition" title="Tarik data terkini daripada Google Sheet">
+            <i class="fa-solid fa-rotate"></i> Refresh Cloud
+        </button>
+        <span id="adminHintBadge" class="hidden md:inline-block text-[11px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-semibold">
+            <i class="fa-solid fa-mobile-screen-button mr-1"></i> Responsif Desktop, Tablet & Mobile
+        </span>
+    </div>
+</div>
+
+<!-- ================= MAIN WORKSPACE AREA ================= -->
+<main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 no-print">
+
+    <!-- ================= SHEET 1: PERUNTUKAN MAIN VIEW ================= -->
+    <section id="sheet-PERUNTUKAN" class="space-y-6">
+        
+        <div>
+            <div class="flex items-center justify-between mb-2.5">
+                <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+                    <i class="fa-solid fa-layer-group text-teal-600 mr-1"></i> Kedudukan Semasa Mengikut Tabung (Ditapis Mengikut Pilihan)
+                </h2>
+                <span id="totalActivitiesHeaderBadge" class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">0 / 0 Aktiviti Selesai</span>
+            </div>
+            <div id="separateFundCardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
+            <div class="bg-slate-800 text-white px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wide">SENARAI TABUNG / SUMBER PERUNTUKAN JHEP</h2>
+                    <p class="text-[11px] text-slate-300">Setiap tabung diasingkan. Super Admin boleh taip terus Peruntukan Diterima (kotak kuning) atau tambah Tab Sheet baharu.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openSheetCrudModal()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-folder-plus"></i> + Tambah / Urus Tab Sheet
+                    </button>
+                    <button onclick="openNewActivityModal('MASUK')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Rekod Transaksi Dana Masuk
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto p-4">
+                <table class="w-full border-collapse excel-table">
+                    <thead>
+                        <tr>
+                            <th class="py-2.5 px-3 text-center w-12">BIL</th>
+                            <th class="py-2.5 px-4 text-left">KOD & NAMA TAB SHEET (SUMBER PERUNTUKAN)</th>
+                            <th class="py-2.5 px-4 text-left">RUJUKAN WARAN / CATATAN DANA MASUK</th>
+                            <th class="py-2.5 px-4 text-right w-48">PERUNTUKAN DITERIMA (DANA MASUK RM)</th>
+                            <th class="py-2.5 px-4 text-right w-44">JUMLAH PERBELANJAAN (RM)</th>
+                            <th class="py-2.5 px-4 text-right w-44">BAKI SEMASA TABUNG (RM)</th>
+                            <th class="py-2.5 px-3 text-center w-32">AKTIVITI</th>
+                            <th class="py-2.5 px-3 text-center w-48">TINDAKAN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="peruntukanMainTableBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Master Tracking Table with Year/Session/Dept -->
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-300 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">SENARAI TRACKING KELULUSAN KERJA & LAPORAN AKTIVITI</h3>
+                    <p class="text-xs text-slate-500">Papar dan tapis mengikut tahun, sesi dan jabatan, atau klik <strong>"Tracking"</strong> untuk kemas kini.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="globalFundFilter" onchange="renderAllSheets()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold">
+                        <option value="ALL">Semua Tabung</option>
+                    </select>
+                    <input type="text" id="globalSearchInput" oninput="renderAllSheets()" placeholder="Cari aktiviti / no fail..." class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white w-48">
+                    <select id="globalStatusFilter" onchange="renderAllSheets()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold"></select>
+                </div>
+            </div>
+            <div class="overflow-x-auto p-4">
+                <table class="w-full border-collapse excel-table">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3 text-left">TABUNG</th>
+                            <th class="py-2 px-3 text-left">TAHUN / SESI</th>
+                            <th class="py-2 px-3 text-left">TARIKH</th>
+                            <th class="py-2 px-3 text-left">PERKARA / NAMA AKTIVITI</th>
+                            <th class="py-2 px-3 text-left">NO. FAIL</th>
+                            <th class="py-2 px-3 text-left">JABATAN / UNIT</th>
+                            <th class="py-2 px-3 text-right">BELANJA (RM)</th>
+                            <th class="py-2 px-3 text-center">STATUS</th>
+                            <th class="py-2 px-3 text-center">TINDAKAN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="masterTrackingTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= SHEET DYNAMIC CASHBOOK LEDGER VIEW ================= -->
+    <section id="sheet-LEDGER" class="hidden space-y-5">
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm p-5">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="ledgerBadgeCode" class="px-2.5 py-0.5 rounded bg-teal-100 text-teal-800 font-extrabold text-xs">OS42000</span>
+                        <button onclick="openSheetCrudModal(activeSheet)" class="text-xs bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 px-2.5 py-1 rounded-lg border border-slate-300 font-bold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-pen-to-square text-amber-600"></i> Edit Tab Ini
+                        </button>
+                        <button onclick="confirmDeleteSheet(activeSheet)" class="text-xs bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2.5 py-1 rounded-lg border border-rose-200 font-bold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-trash-can"></i> Padam Tab Sheet Ini
+                        </button>
+                    </div>
+                    <h2 id="ledgerSheetTitle" class="text-lg font-extrabold text-slate-900 mt-1">BUKU TUNAI PERUNTUKAN</h2>
+                    <p id="ledgerSheetSubtitle" class="text-xs text-slate-500">Format Buku Tunai Excel dengan saringan tahun dan sesi aktif.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openNewActivityModal()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus-circle"></i> + Tambah Rekod (Masuk / Keluar)
+                    </button>
+                    <button onclick="openExportReportModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-export"></i> Eksport Laporan
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+                <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                    <span class="text-[11px] text-emerald-800 font-semibold block">JUMLAH MASUK</span>
+                    <span id="sheetTotalMasuk" class="text-lg font-extrabold text-emerald-700">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-rose-50 border border-rose-200">
+                    <span class="text-[11px] text-rose-800 font-semibold block">JUMLAH KELUAR</span>
+                    <span id="sheetTotalKeluar" class="text-lg font-extrabold text-rose-600">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-amber-50 border border-amber-300">
+                    <span class="text-[11px] text-amber-900 font-bold block">BAKI SEMASA</span>
+                    <span id="sheetTotalBaki" class="text-lg font-extrabold text-slate-900">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                    <span class="text-[11px] text-indigo-800 font-semibold block">BILANGAN REKOD</span>
+                    <span id="sheetTotalCount" class="text-lg font-extrabold text-indigo-700">0 Rekod</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto p-3 sm:p-4">
+                <table class="w-full border-collapse excel-table">
+                    <thead>
+                        <tr>
+                            <th class="py-2.5 px-2.5 text-center w-10">BIL</th>
+                            <th class="py-2.5 px-3 text-left w-28">TARIKH</th>
+                            <th class="py-2.5 px-3 text-left w-32">TAHUN / SESI</th>
+                            <th class="py-2.5 px-3 text-left">PERKARA (DANA MASUK / NAMA AKTIVITI)</th>
+                            <th class="py-2.5 px-3 text-left w-36">NO. FAIL</th>
+                            <th class="py-2.5 px-3 text-left w-44">UNIT / JABATAN</th>
+                            <th class="py-2.5 px-3 text-right w-36">MASUK (RM)</th>
+                            <th class="py-2.5 px-3 text-right w-36">KELUAR (RM)</th>
+                            <th class="py-2.5 px-3 text-right w-36">BAKI (RM)</th>
+                            <th class="py-2.5 px-3 text-left w-36">STATUS</th>
+                            <th class="py-2.5 px-3 text-center w-40">TINDAKAN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody" class="divide-y divide-slate-200"></tbody>
+                    <tfoot id="ledgerTableFoot" class="bg-slate-100 font-extrabold text-xs"></tfoot>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ================= BOTTOM EXCEL WORKBOOK SHEET TABS BAR ================= -->
+<footer class="bg-slate-200 border-t border-slate-300 px-3 py-1.5 flex items-center justify-between gap-2 shrink-0 no-print">
+    <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+        <span class="text-[10px] font-extrabold uppercase text-slate-500 px-2 flex items-center gap-1 shrink-0">
+            <i class="fa-solid fa-table-cells-large"></i> TAB SHEET:
+        </span>
+        <div id="bottomSheetTabsContainer" class="flex items-center gap-1"></div>
+        <button onclick="openSheetCrudModal()" class="ml-1 px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-[11px] flex items-center gap-1 shrink-0 shadow-sm">
+            <i class="fa-solid fa-plus"></i> Tab Baharu
+        </button>
+    </div>
+    <div class="hidden sm:flex items-center gap-2 text-[11px] font-semibold text-slate-600 shrink-0">
+        <span id="footerSyncBadge" class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-[10px]">
+            Sheet ID: 1ntxRd...o47VQ
+        </span>
+    </div>
+</footer>
+
+<!-- ================= MODAL GOOGLE SHEET AUTO-SETUP & CLOUD SYNC ================= -->
+<div id="modalGoogleSheetSetup" class="fixed inset-0 bg-slate-900/75 z-50 hidden items-center justify-center p-3 sm:p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto border border-slate-300">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow">
+                    <i class="fa-solid fa-table text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Integrasi Automatik Google Sheet & Multi-Device Sync</h3>
+                    <p class="text-xs text-slate-500">Sambungan terus ke Google Sheet ID: <code class="font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">1ntxRdA5Y9a9Uq8PdMb5_9utqjXMrzHqXFFlP0uo47VQ</code></p>
+                </div>
+            </div>
+            <button onclick="closeModal('modalGoogleSheetSetup')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <!-- Bahagian 1: Masukkan Web App URL & Butang Sync -->
+        <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-4 space-y-3 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-extrabold text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
+                    <i class="fa-solid fa-link text-emerald-600"></i> 1. Pautan Google Apps Script Web App URL (Untuk Desktop, Mobile & Tablet)
+                </span>
+                <a href="https://docs.google.com/spreadsheets/d/1ntxRdA5Y9a9Uq8PdMb5_9utqjXMrzHqXFFlP0uo47VQ/edit" target="_blank" class="bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                    <i class="fa-solid fa-up-right-from-square"></i> Buka Google Sheet Anda
+                </a>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">ampelkan Web App URL (`https://script.google.com/macros/s/.../exec`) di sini:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="url" id="gasWebAppUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono text-xs focus:border-emerald-600 focus:outline-none">
+                    <button onclick="saveGasWebAppUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm shrink-0">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Sambung
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-600 mt-1">
+                    * Tip: Anda juga boleh berkongsi pautan aplikasi dengan parameter <code>?gas_url=URL_ANDA</code> supaya pengguna telefon pintar/tablet terus tersambung secara automatik.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/80">
+                <div id="syncLastTimestampInfo" class="text-[11px] font-semibold text-emerald-900">
+                    Status: Sedia untuk penyelarasan automatik.
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="syncFromGoogleSheet(true)" class="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-down text-indigo-600"></i> Tarik Data dari Sheet (Pull)
+                    </button>
+                    <button onclick="syncToGoogleSheet(true)" class="bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i> Setup Auto & Hantar ke Sheet (Push)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bahagian 2: Panduan Pantas 1-Klik & Kod Google Apps Script -->
+        <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+                <h4 class="font-extrabold text-slate-800 uppercase">2. Kod Automatik Google Apps Script (Code.gs) — Siap Dikonfigurasi</h4>
+                <button onclick="copyGasScriptCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-copy"></i> Salin Kod (Copy Code.gs)
+                </button>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-700 space-y-1">
+                <div><strong>Cara Pasang Sekali Sahaja (Auto-Create Semua Tab & Lajur):</strong></div>
+                <ol class="list-decimal list-inside space-y-0.5 text-slate-600">
+                    <li>Buka Google Sheet anda (ID: <code>1ntxRdA5Y9a9Uq8PdMb5_9utqjXMrzHqXFFlP0uo47VQ</code>) & klik menu <strong>Extensions &rarr; Apps Script</strong>.</li>
+                    <li>Padam kod sedia ada dalam <code>Code.gs</code> dan tampal (Paste) kod di bawah, kemudian klik ikon <strong>Save</strong>.</li>
+                    <li>Klik <strong>Deploy &rarr; New deployment</strong> &rarr; Pilih jenis <strong>Web app</strong>.</li>
+                    <li>Setkan <em>Execute as</em>: <strong>Me</strong> dan <em>Who has access</em>: <strong>Anyone</strong>, kemudian klik <strong>Deploy</strong>.</li>
+                    <li>Salin <strong>Web App URL</strong> yang diberikan dan tampal ke dalam kotak di atas. Semua tab dan jadual akan dijana secara automatik!</li>
+                </ol>
+            </div>
+            <textarea id="gasScriptCodeTextarea" readonly rows="10" class="w-full font-mono text-[11px] bg-slate-900 text-emerald-300 p-3.5 rounded-xl border border-slate-700 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-slate-200">
+            <button onclick="closeModal('modalGoogleSheetSetup')" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-slate-800 text-white hover:bg-slate-900">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL 1: TAMBAH / EDIT BARIS (BOLEH PILIH DROPDOWN ATAU TAIP TERUS) ================= -->
+<div id="modalNewEntry" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h3 id="modalEntryHeading" class="text-base font-extrabold text-slate-800">Tambah / Edit Rekod Buku Tunai</h3>
+                <p class="text-[11px] text-slate-500">Pilih daripada senarai dropdown atau <strong>taip terus</strong> nilai baharu dalam ruangan.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openDropdownCrudModal()" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1" title="Urus senarai pilihan dropdown">
+                    <i class="fa-solid fa-sliders"></i> Urus Dropdown
+                </button>
+                <button onclick="closeModal('modalNewEntry')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+        </div>
+
+        <input type="hidden" id="editingEntryId" value="">
+
+        <!-- Datalist Dinamik untuk Sokongan Pilih Dropdown + Taip Terus -->
+        <datalist id="dlYears"></datalist>
+        <datalist id="dlSessions"></datalist>
+        <datalist id="dlUnits"></datalist>
+        <datalist id="dlStatuses"></datalist>
+
+        <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Tabung / Sheet</label>
+                    <select id="entryFundCode" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold"></select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Jenis Transaksi</label>
+                    <select id="entryType" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                        <option value="KELUAR">Duit Keluar (Perbelanjaan Program)</option>
+                        <option value="MASUK">Duit Masuk (Peruntukan Diterima)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="flex items-center justify-between font-bold text-slate-600 mb-1">
+                        <span>Tahun <span class="text-[10px] text-teal-600 font-normal">(Pilih/Taip)</span></span>
+                        <button type="button" onclick="openDropdownCrudModal('years')" class="text-[10px] text-indigo-600 hover:underline font-semibold">Edit</button>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="entryYear" list="dlYears" placeholder="Pilih / taip tahun..." class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold focus:border-teal-600 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="flex items-center justify-between font-bold text-slate-600 mb-1">
+                        <span>Sesi <span class="text-[10px] text-teal-600 font-normal">(Pilih/Taip)</span></span>
+                        <button type="button" onclick="openDropdownCrudModal('sessions')" class="text-[10px] text-indigo-600 hover:underline font-semibold">Edit</button>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="entrySession" list="dlSessions" placeholder="Pilih / taip sesi..." class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold focus:border-teal-600 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Tarikh</label>
+                    <input type="date" id="entryDate" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Perkara (Nama Program / Aktiviti)</label>
+                <input type="text" id="entryTitle" placeholder="Contoh: Program Kepimpinan Pelajar JHEP" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">No. Fail / Rujukan</label>
+                    <input type="text" id="entryFileNo" placeholder="JHEP.600-3/2/14" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+                </div>
+                <div>
+                    <label class="flex items-center justify-between font-bold text-slate-600 mb-1">
+                        <span>Jabatan / Unit <span class="text-[10px] text-teal-600 font-normal">(Pilih/Taip)</span></span>
+                        <button type="button" onclick="openDropdownCrudModal('units')" class="text-[10px] text-indigo-600 hover:underline font-semibold">Edit</button>
+                    </label>
+                    <input type="text" id="entryUnit" list="dlUnits" placeholder="Pilih atau taip jabatan/unit..." class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:border-teal-600 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Amaun (RM)</label>
+                    <input type="number" step="0.01" id="entryAmount" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-bold">
+                </div>
+                <div>
+                    <label class="flex items-center justify-between font-bold text-slate-600 mb-1">
+                        <span>Status Tracking <span class="text-[10px] text-teal-600 font-normal">(Pilih/Taip)</span></span>
+                        <button type="button" onclick="openDropdownCrudModal('statuses')" class="text-[10px] text-indigo-600 hover:underline font-semibold">Edit</button>
+                    </label>
+                    <input type="text" id="entryTrackingStatus" list="dlStatuses" placeholder="Pilih atau taip status..." class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:border-teal-600 focus:outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <button onclick="closeModal('modalNewEntry')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
+            <button onclick="saveLedgerEntry()" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-teal-600 text-white hover:bg-teal-700">Simpan Rekod</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL 1C: URUS PILIHAN DROPDOWN (TAHUN, SESI, UNIT & STATUS) ================= -->
+<div id="modalDropdownCrud" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900">Urus Senarai Pilihan Dropdown (Tahun, Sesi, Jabatan & Status)</h3>
+                <p class="text-xs text-slate-500">Tambah pilihan baharu, klik teks untuk edit terus, atau padam pilihan yang tidak berkaitan.</p>
+            </div>
+            <button onclick="closeModal('modalDropdownCrud')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <!-- Tab Kategori Dropdown -->
+        <div class="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2 text-xs">
+            <button onclick="switchDropdownCategory('years')" id="ddTab-years" class="px-3 py-1.5 rounded-lg font-extrabold bg-indigo-600 text-white">Tahun</button>
+            <button onclick="switchDropdownCategory('sessions')" id="ddTab-sessions" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Sesi</button>
+            <button onclick="switchDropdownCategory('units')" id="ddTab-units" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Jabatan / Unit</button>
+            <button onclick="switchDropdownCategory('statuses')" id="ddTab-statuses" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Status Tracking</button>
+        </div>
+
+        <!-- Tambah Item Baharu -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center gap-2 text-xs">
+            <input type="text" id="newDropdownValueInput" placeholder="Taip pilihan baharu di sini..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold focus:border-indigo-600 focus:outline-none">
+            <button onclick="addNewDropdownOption()" class="bg-teal-600 hover:bg-teal-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm shrink-0">
+                <i class="fa-solid fa-plus mr-1"></i> Tambah Pilihan
+            </button>
+        </div>
+
+        <!-- Senarai Sedia Ada (Boleh Taip / Edit Terus & Padam) -->
+        <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between text-slate-500 font-bold uppercase text-[11px]">
+                <span id="ddCategoryLabel">Senarai Pilihan Semasa (Boleh ubah teks terus & klik Simpan):</span>
+            </div>
+            <div id="dropdownOptionsListContainer" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden bg-white"></div>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-slate-200">
+            <button onclick="closeModal('modalDropdownCrud')" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-slate-800 text-white hover:bg-slate-900">Selesai & Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL 1B: CRUD TAB SHEET ================= -->
+<div id="modalSheetCrud" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 class="text-base font-extrabold text-slate-900">Urus Tab Sheet / Sumber Peruntukan</h3>
+            <button onclick="closeModal('modalSheetCrud')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+                <h4 id="sheetFormBadge" class="font-extrabold text-teal-800 uppercase">+ Tambah Tab Sheet Baharu</h4>
+                <button onclick="resetSheetCrudForm()" class="text-[11px] text-slate-500 hover:text-slate-800 underline font-semibold">Reset Borang</button>
+            </div>
+            <input type="hidden" id="sheetOriginalCode" value="">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Kod Tab (Tanpa Jarak)</label>
+                    <input type="text" id="sheetCodeInput" placeholder="Cth: OS42000" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold uppercase bg-white">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-600 mb-1">Nama Penuh Tab Sheet</label>
+                    <input type="text" id="sheetNameInput" placeholder="Cth: TABUNG AMANAH" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-bold bg-white">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-600 mb-1">Rujukan Waran</label>
+                    <input type="text" id="sheetWaranInput" placeholder="Waran Peruntukan Bil. 1" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-600 mb-1">Dana Masuk Awal (RM)</label>
+                    <input type="number" step="0.01" id="sheetMasukInput" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-extrabold text-right bg-amber-50">
+                </div>
+            </div>
+            <div class="flex justify-end pt-1">
+                <button onclick="saveSheetCrudForm()" class="bg-teal-600 hover:bg-teal-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Tab Sheet
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-2 text-xs">
+            <h4 class="font-extrabold text-slate-700 uppercase">Senarai Tab Sheet Sedia Ada (Klik Edit atau Padam):</h4>
+            <div id="existingSheetsCrudList" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL PENGESAHAN PADAM (TIADA ALERT BROWSER) ================= -->
+<div id="modalConfirmDelete" class="fixed inset-0 bg-slate-900/70 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-rose-200">
+        <div class="flex items-center gap-3 text-rose-600">
+            <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            </div>
+            <div>
+                <h3 id="confirmDeleteTitle" class="text-base font-extrabold text-slate-900">Sahkan Padam</h3>
+                <p id="confirmDeleteDesc" class="text-xs text-slate-500 mt-0.5">Tindakan ini tidak boleh dikembalikan.</p>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <button onclick="closeModal('modalConfirmDelete')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
+            <button id="confirmDeleteBtn" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-trash-can"></i> Ya, Padam Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL 2: EKSPORT LAPORAN LENGKAP (PDF, WORD, EXCEL) ================= -->
+<div id="modalExportReport" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900">Eksport & Cetak Laporan Lengkap</h3>
+                <p class="text-xs text-slate-500">Pilih format fail dan tetapan saringan semasa untuk dimuat turun.</p>
+            </div>
+            <button onclick="closeModal('modalExportReport')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-600 mb-1">Format Fail Eksport</label>
+                <select id="exportFormatSelect" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold">
+                    <option value="PDF">Dokumen PDF (Cetak / Simpan PDF)</option>
+                    <option value="WORD">Dokumen Microsoft Word (.doc)</option>
+                    <option value="EXCEL">Helaian Microsoft Excel (.xls / CSV)</option>
+                </select>
+            </div>
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-teal-900 space-y-1">
+                <div class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Saringan Terpakai:</div>
+                <p id="exportReportInfoSummary" class="text-teal-800 font-medium"></p>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <button onclick="closeModal('modalExportReport')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
+            <button onclick="executeExportReport()" class="px-5 py-2 rounded-lg text-xs font-extrabold bg-teal-600 text-white hover:bg-teal-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-download"></i> Muat Turun / Cetak Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL 3: TRACKING DRAWER ================= -->
+<div id="modalTrackingDrawer" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-300">
+        <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span id="trkSheetBadge" class="px-2 py-0.5 rounded bg-teal-500 text-slate-950 font-extrabold text-[10px]">OS42000</span>
+                    <span id="trkFileNo" class="text-xs font-mono text-slate-300">JHEP/2026/01</span>
+                </div>
+                <h3 id="trkTitle" class="text-base font-extrabold mt-1">Nama Aktiviti</h3>
+            </div>
+            <button onclick="closeModal('modalTrackingDrawer')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+            <div class="grid grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div>
+                    <span class="text-slate-400 text-[10px] block">Tahun / Sesi</span>
+                    <strong id="trkYearSession" class="text-slate-800">2026 / Sesi 1</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-[10px] block">Tarikh</span>
+                    <strong id="trkDate" class="text-slate-800">-</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-[10px] block">Unit / Jabatan</span>
+                    <strong id="trkUnit" class="text-slate-800">-</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-[10px] block">Amaun</span>
+                    <strong id="trkAmount" class="text-rose-600 font-extrabold">RM 0.00</strong>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-extrabold text-slate-800 uppercase text-[11px]">Kemas Kini Status Tracking (Pilih atau Taip Terus)</h4>
+                    <button type="button" onclick="openDropdownCrudModal('statuses')" class="text-[11px] text-indigo-600 hover:underline font-bold">Urus Senarai Status</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="trkStatusSelect" list="dlStatuses" placeholder="Pilih atau taip status..." class="border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold focus:border-teal-600 focus:outline-none">
+                    <input type="text" id="trkNewNote" placeholder="Catatan kemas kini..." class="border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="saveActivityTrackingUpdate()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-lg">Kemas Kini Status</button>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-extrabold text-slate-800 uppercase text-[11px] mb-2">Timeline Jejak Aktiviti</h4>
+                <div id="trkTimelineList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= PRINTABLE A4 AREA ================= -->
+<div id="printArea" class="hidden"></div>
+<div id="toast" class="fixed bottom-12 right-5 z-50 hidden bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl border border-slate-700 items-center gap-2 no-print">
+    <i class="fa-solid fa-circle-check text-teal-400"></i>
+    <span id="toastText">Berjaya</span>
+</div>
+
+<script>
+const STORAGE_KEY = "IDANA_JHEP_YEAR_SESSION_V3";
+const GOOGLE_SHEET_ID = "1ntxRdA5Y9a9Uq8PdMb5_9utqjXMrzHqXFFlP0uo47VQ";
+const GAS_URL_STORAGE_KEY = "IDANA_JHEP_GAS_WEBAPP_URL";
+
+let currentUser = { role: "ADMIN", name: "Super Admin" };
+let activeSheet = "PERUNTUKAN";
+let selectedEntryId = null;
+let activeDropdownCategory = "years";
+let isCloudSyncing = false;
+
+const DEFAULT_DROPDOWNS = {
+    years: ["2026", "2025", "2024"],
+    sessions: ["Sesi 1/2026", "Sesi 2/2026", "Sesi 1/2025", "Sesi 2/2025"],
+    units: [
+        "JHEP (Induk)",
+        "Unit Kepimpinan & Pembangunan Pelajar",
+        "Unit Kebajikan & Perkhidmatan",
+        "Unit Sukan & Kebudayaan",
+        "Majlis Perwakilan Pelajar (MPP)"
+    ],
+    statuses: [
+        "Kertas Kerja Diluluskan",
+        "Dalam Pelaksanaan",
+        "Menunggu Laporan / Resit",
+        "Selesai & Laporan Lengkap"
+    ]
+};
+
+const DEFAULT_STATE = {
+    dropdowns: JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS)),
+    funds: {
+        KEBAJIKAN: { code: "KEBAJIKAN", name: "BANTUAN KEBAJIKAN PELAJAR", allocatedMasuk: 30000, waranRef: "Waran Tabung Kebajikan 2026" },
+        OS42000: { code: "OS42000", name: "OS42000 (AKTIVITI PELAJAR)", allocatedMasuk: 100000, waranRef: "Waran Peruntukan OS42000 Bil. 1/2026" },
+        SAKP: { code: "SAKP", name: "AKAUN AMANAH SAKP", allocatedMasuk: 65000, waranRef: "Peruntukan Akaun Amanah SAKP" }
+    },
+    entries: [
+        {
+            id: "ENT-101", fund: "KEBAJIKAN", type: "KELUAR", year: "2026", session: "Sesi 1/2026", date: "2026-01-22",
+            title: "Bantuan Kecemasan Bencana Pelajar", fileNo: "JHEP.KEB/2026/01", unit: "Unit Kebajikan & Perkhidmatan",
+            masuk: 0, keluar: 3500, status: "Selesai & Laporan Lengkap",
+            timeline: [{ time: "22/01/2026", stage: "Selesai & Laporan Lengkap", note: "Bayaran telah diselesaikan", user: "Super Admin" }]
+        },
+        {
+            id: "ENT-201", fund: "OS42000", type: "KELUAR", year: "2026", session: "Sesi 1/2026", date: "2026-02-05",
+            title: "Kem Kepimpinan MPP & Jawatankuasa Pelajar", fileNo: "JHEP.OS42/2026/04", unit: "Majlis Perwakilan Pelajar (MPP)",
+            masuk: 0, keluar: 8500, status: "Selesai & Laporan Lengkap",
+            timeline: [{ time: "05/02/2026", stage: "Selesai & Laporan Lengkap", note: "Laporan lengkap diterima", user: "Super Admin" }]
+        },
+        {
+            id: "ENT-202", fund: "OS42000", type: "KELUAR", year: "2025", session: "Sesi 2/2025", date: "2025-10-14",
+            title: "Kejohanan Sukan Antara Jabatan", fileNo: "JHEP.OS42/2025/19", unit: "Unit Sukan & Kebudayaan",
+            masuk: 0, keluar: 6000, status: "Dalam Pelaksanaan",
+            timeline: [{ time: "14/10/2025", stage: "Dalam Pelaksanaan", note: "Kertas kerja diluluskan", user: "Staf Unit" }]
+        },
+        {
+            id: "ENT-301", fund: "SAKP", type: "KELUAR", year: "2026", session: "Sesi 2/2026", date: "2026-03-10",
+            title: "Bengkel Pengurusan Organisasi & Kewangan Kelab", fileNo: "JHEP.SAKP/2026/02", unit: "Unit Kepimpinan & Pembangunan Pelajar",
+            masuk: 0, keluar: 4800, status: "Menunggu Laporan / Resit",
+            timeline: [{ time: "10/03/2026", stage: "Menunggu Laporan / Resit", note: "Menunggu penyerahan resit rasmi", user: "Staf Unit" }]
+        }
+    ]
+};
+
+let state = loadState();
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        if (!parsed.funds || Object.keys(parsed.funds).length === 0) {
+            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+        if (!parsed.dropdowns) {
+            parsed.dropdowns = JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS));
+        }
+        if (!Array.isArray(parsed.entries)) {
+            parsed.entries = [];
+        }
+        return parsed;
+    } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+}
+
+function saveState(skipCloudSync = false) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!skipCloudSync) {
+        syncToGoogleSheet(false);
+    }
+}
+
+// ================= INTEGRASI AUTOMATIK GOOGLE SHEETS (APPS SCRIPT API) =================
+function getGasWebAppUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramUrl = urlParams.get("gas_url");
+    if (paramUrl && paramUrl.startsWith("https://script.google.com/")) {
+        localStorage.setItem(GAS_URL_STORAGE_KEY, paramUrl.trim());
+        return paramUrl.trim();
+    }
+    return (localStorage.getItem(GAS_URL_STORAGE_KEY) || "").trim();
+}
+
+function updateCloudStatusBadge(statusText, statusType = "READY") {
+    const textEl = document.getElementById("cloudSyncStatusText");
+    const iconEl = document.getElementById("cloudSyncIcon");
+    const infoEl = document.getElementById("syncLastTimestampInfo");
+    const url = getGasWebAppUrl();
+
+    if (textEl) {
+        textEl.textContent = url ? statusText : "Setup Google Sheet";
+    }
+    if (iconEl) {
+        if (statusType === "SYNCING") {
+            iconEl.className = "fa-solid fa-spinner fa-spin";
+        } else if (statusType === "SUCCESS") {
+            iconEl.className = "fa-solid fa-cloud-check";
+        } else if (statusType === "ERROR") {
+            iconEl.className = "fa-solid fa-triangle-exclamation";
+        } else {
+            iconEl.className = "fa-solid fa-cloud-arrow-up";
+        }
+    }
+    if (infoEl) {
+        const timeStr = new Date().toLocaleTimeString("ms-MY");
+        infoEl.textContent = url
+            ? `Status Awan: ${statusText} (Kemas kini terakhir: ${timeStr})`
+            : `Belum disambungkan ke Web App URL. Sila tampal URL Google Apps Script di atas.`;
+    }
+}
+
+function openGoogleSheetSetupModal() {
+    const urlInput = document.getElementById("gasWebAppUrlInput");
+    if (urlInput) urlInput.value = getGasWebAppUrl();
+    const codeArea = document.getElementById("gasScriptCodeTextarea");
+    if (codeArea) codeArea.value = generateGoogleAppsScriptCode();
+    showModal("modalGoogleSheetSetup");
+}
+
+function saveGasWebAppUrl() {
+    const input = document.getElementById("gasWebAppUrlInput");
+    const url = (input?.value || "").trim();
+    if (!url) {
+        localStorage.removeItem(GAS_URL_STORAGE_KEY);
+        updateCloudStatusBadge("Setup Google Sheet", "READY");
+        showToast("URL Google Apps Script telah dikosongkan.");
+        return;
+    }
+    localStorage.setItem(GAS_URL_STORAGE_KEY, url);
+    updateCloudStatusBadge("Tersambung", "SUCCESS");
+    showToast("Web App URL disimpan! Menyelaras data dengan Google Sheet...");
+    syncToGoogleSheet(true);
+}
+
+async function syncToGoogleSheet(showNotification = false) {
+    const url = getGasWebAppUrl();
+    if (!url || isCloudSyncing) return;
+
+    try {
+        isCloudSyncing = true;
+        updateCloudStatusBadge("Menyimpan ke Sheet...", "SYNCING");
+
+        const payload = {
+            action: "SYNC_ALL",
+            sheetId: GOOGLE_SHEET_ID,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentUser.name,
+            state: state
+        };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result && result.status === "success") {
+            updateCloudStatusBadge("Disimpan di Sheet", "SUCCESS");
+            if (showNotification) {
+                showToast("Semua Tab Sheet & Rekod berjaya disegerakkan ke Google Sheet!");
+            }
+        } else {
+            updateCloudStatusBadge("Ralat Sync", "ERROR");
+            if (showNotification) showToast("Ralat semasa menghantar ke Google Sheet.");
+        }
+    } catch (err) {
+        updateCloudStatusBadge(" Luar Talian / Semak URL", "ERROR");
+        if (showNotification) {
+            showToast("Gagal menghubungi Web App URL. Pastikan akses disetkan kepada 'Anyone'.");
+        }
+    } finally {
+        isCloudSyncing = false;
+    }
+}
+
+async function syncFromGoogleSheet(showNotification = false) {
+    const url = getGasWebAppUrl();
+    if (!url) {
+        if (showNotification) openGoogleSheetSetupModal();
+        return;
+    }
+
+    try {
+        isCloudSyncing = true;
+        updateCloudStatusBadge("Menarik Data...", "SYNCING");
+
+        const response = await fetch(`${url}?action=GET_ALL&sheetId=${GOOGLE_SHEET_ID}&t=${Date.now()}`);
+        const result = await response.json();
+
+        if (result && result.status === "success" && result.state && result.state.funds) {
+            state = result.state;
+            if (!state.dropdowns) state.dropdowns = JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS));
+            if (!Array.isArray(state.entries)) state.entries = [];
+            saveState(true);
+            renderAllSheets();
+            updateCloudStatusBadge("Data Terkini", "SUCCESS");
+            if (showNotification) {
+                showToast("Data terkini daripada Google Sheet berjaya dimuat turun!");
+            }
+        } else if (result && result.status === "empty") {
+            await syncToGoogleSheet(false);
+            updateCloudStatusBadge("Auto-Setup Selesai", "SUCCESS");
+            if (showNotification) {
+                showToast("Google Sheet baharu dikesan — data permulaan telah dijana secara automatik!");
+            }
+        }
+    } catch (err) {
+        updateCloudStatusBadge("Mod Simpanan Lokal", "ERROR");
+        if (showNotification) {
+            showToast("Tidak dapat menarik data dari Google Sheet. Semak sambungan atau URL.");
+        }
+    } finally {
+        isCloudSyncing = false;
+    }
+}
+
+function copyGasScriptCode() {
+    const textarea = document.getElementById("gasScriptCodeTextarea");
+    if (!textarea) return;
+    textarea.select();
+    document.execCommand("copy");
+    showToast("Kod Google Apps Script (Code.gs) berjaya disalin!");
+}
+
+function generateGoogleAppsScriptCode() {
+    return `/**
+ * ============================================================================
+ * SISTEM IDANA JHEP (iJejak Dana) — AUTO DATABASE & MULTI-DEVICE SYNC
+ * ID Google Sheet: ${GOOGLE_SHEET_ID}
+ * ============================================================================
+ * Skrip ini membina dan mengemas kini semua Tab Sheet secara automatik:
+ * 1. DB_JSON_STATE (Simpanan struktur penuh untuk penyelarasan pantas Desktop/Mobile/Tablet)
+ * 2. PERUNTUKAN (Jadual induk peruntukan setiap tabung)
+ * 3. SEMUA_TRANSAKSI (Rekod penuh semua buku tunai & status tracking)
+ * 4. Tab Buku Tunai Berasingan mengikut kod tabung (KEBAJIKAN, OS42000, SAKP, dll.)
+ */
+
+const SPREADSHEET_ID = "${GOOGLE_SHEET_ID}";
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let dbSheet = ss.getSheetByName("DB_JSON_STATE");
+    if (!dbSheet) {
+      setupInitialSheets(ss);
+      return jsonResponse({ status: "empty", message: "Database baharu telah disediakan." });
+    }
+    const rawJson = dbSheet.getRange("A2").getValue();
+    if (!rawJson) {
+      return jsonResponse({ status: "empty", message: "Tiada data lagi." });
+    }
+    return jsonResponse({
+      status: "success",
+      updatedAt: dbSheet.getRange("B2").getValue(),
+      state: JSON.parse(rawJson)
+    });
+  } catch (err) {
+    return jsonResponse({ status: "error", message: err.toString() });
+  }
+}
+
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const state = payload.state;
+
+    if (!state || !state.funds) {
+      return jsonResponse({ status: "error", message: "Format data tidak sah." });
+    }
+
+    // 1. Simpan JSON State penuh untuk penyelarasan pantas semua peranti
+    let dbSheet = ss.getSheetByName("DB_JSON_STATE");
+    if (!dbSheet) dbSheet = ss.insertSheet("DB_JSON_STATE");
+    dbSheet.clear();
+    dbSheet.getRange("A1:C1").setValues([["STATE_JSON", "UPDATED_AT", "UPDATED_BY"]]).setFontWeight("bold");
+    dbSheet.getRange("A2:C2").setValues([[JSON.stringify(state), new Date().toISOString(), payload.updatedBy || "Sistem"]]);
+
+    // 2. Jana & Kemas kini Tab Induk: PERUNTUKAN
+    syncPeruntukanSheet(ss, state);
+
+    // 3. Jana & Kemas kini Tab Induk: SEMUA_TRANSAKSI
+    syncMasterTransactionsSheet(ss, state);
+
+    // 4. Jana & Kemas kini Setiap Tab Buku Tunai Mengikut Tabung
+    syncIndividualFundSheets(ss, state);
+
+    return jsonResponse({ status: "success", message: "Database Google Sheet berjaya dikemas kini secara automatik." });
+  } catch (err) {
+    return jsonResponse({ status: "error", message: err.toString() });
+  }
+}
+
+function setupInitialSheets(ss) {
+  let dbSheet = ss.getSheetByName("DB_JSON_STATE");
+  if (!dbSheet) {
+    dbSheet = ss.insertSheet("DB_JSON_STATE");
+    dbSheet.getRange("A1:C1").setValues([["STATE_JSON", "UPDATED_AT", "UPDATED_BY"]]).setFontWeight("bold");
+  }
+}
+
+function syncPeruntukanSheet(ss, state) {
+  let sheet = ss.getSheetByName("PERUNTUKAN");
+  if (!sheet) sheet = ss.insertSheet("PERUNTUKAN");
+  sheet.clear();
+
+  const headers = [["BIL", "KOD TABUNG", "NAMA TABUNG / SUMBER PERUNTUKAN", "RUJUKAN WARAN", "DANA MASUK (RM)", "JUMLAH KELUAR (RM)", "BAKI SEMASA (RM)"]];
+  sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#0f172a").setFontColor("#ffffff").setFontWeight("bold");
+
+  const codes = Object.keys(state.funds || {});
+  const rows = codes.map((code, i) => {
+    const f = state.funds[code];
+    const entries = (state.entries || []).filter(e => e.fund === code);
+    const extraMasuk = entries.reduce((sum, r) => sum + Number(r.masuk || 0), 0);
+    const keluar = entries.reduce((sum, r) => sum + Number(r.keluar || 0), 0);
+    const totalMasuk = Number(f.allocatedMasuk || 0) + extraMasuk;
+    const baki = totalMasuk - keluar;
+    return [i + 1, code, f.name, f.waranRef || "-", totalMasuk, keluar, baki];
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
+    sheet.getRange(2, 5, rows.length, 3).setNumberFormat("#,##0.00");
+  }
+  sheet.autoResizeColumns(1, headers[0].length);
+}
+
+function syncMasterTransactionsSheet(ss, state) {
+  let sheet = ss.getSheetByName("SEMUA_TRANSAKSI");
+  if (!sheet) sheet = ss.insertSheet("SEMUA_TRANSAKSI");
+  sheet.clear();
+
+  const headers = [["ID", "KOD TABUNG", "JENIS", "TAHUN", "SESI", "TARIKH", "PERKARA / NAMA AKTIVITI", "NO. FAIL", "UNIT / JABATAN", "MASUK (RM)", "KELUAR (RM)", "STATUS TRACKING"]];
+  sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#0f172a").setFontColor("#ffffff").setFontWeight("bold");
+
+  const entries = state.entries || [];
+  const rows = entries.map(e => [
+    e.id, e.fund, e.type, e.year || "", e.session || "", e.date || "",
+    e.title || "", e.fileNo || "", e.unit || "", Number(e.masuk || 0), Number(e.keluar || 0), e.status || ""
+  ]);
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
+    sheet.getRange(2, 10, rows.length, 2).setNumberFormat("#,##0.00");
+  }
+  sheet.autoResizeColumns(1, headers[0].length);
+}
+
+function syncIndividualFundSheets(ss, state) {
+  const codes = Object.keys(state.funds || {});
+  codes.forEach(code => {
+    const f = state.funds[code];
+    const safeName = code.substring(0, 28);
+    let sheet = ss.getSheetByName(safeName);
+    if (!sheet) sheet = ss.insertSheet(safeName);
+    sheet.clear();
+
+    const headers = [["BIL", "TARIKH", "TAHUN / SESI", "PERKARA", "NO. FAIL", "UNIT / JABATAN", "MASUK (RM)", "KELUAR (RM)", "BAKI SEMASA (RM)", "STATUS TRACKING"]];
+    sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#1e293b").setFontColor("#ffffff").setFontWeight("bold");
+
+    let runningBaki = Number(f.allocatedMasuk || 0);
+    const rows = [
+      [1, "01/01/2026", "Semua", "PERUNTUKAN DITERIMA (DANA MASUK INDUK)", f.waranRef || "-", "JHEP (Induk)", runningBaki, 0, runningBaki, "Aktif"]
+    ];
+
+    const fundEntries = (state.entries || []).filter(e => e.fund === code);
+    fundEntries.forEach((r, idx) => {
+      const m = Number(r.masuk || 0);
+      const k = Number(r.keluar || 0);
+      runningBaki = runningBaki + m - k;
+      rows.push([
+        idx + 2, r.date || "", (r.year || "") + " / " + (r.session || ""),
+        r.title || "", r.fileNo || "", r.unit || "", m, k, runningBaki, r.status || ""
+      ]);
+    });
+
+    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
+    sheet.getRange(2, 7, rows.length, 3).setNumberFormat("#,##0.00");
+    sheet.autoResizeColumns(1, headers[0].length);
+  });
+}
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+}
+
+function formatRM(val) {
+    return "RM " + Number(val || 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function getFundCodes() { return Object.keys(state.funds || {}); }
+
+function populateDynamicDropdowns() {
+    const dd = state.dropdowns || DEFAULT_DROPDOWNS;
+
+    // 1. Datalists untuk borang input (Boleh Pilih & Taip Terus)
+    const setDatalist = (id, arr) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = arr.map(v => `<option value="${v}"></option>`).join("");
+    };
+    setDatalist("dlYears", dd.years);
+    setDatalist("dlSessions", dd.sessions);
+    setDatalist("dlUnits", dd.units);
+    setDatalist("dlStatuses", dd.statuses);
+
+    // 2. Penapis (Filter) di Bar Atas & Jadual
+    const setFilterSelect = (id, allLabel, arr) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const prev = el.value || "ALL";
+        el.innerHTML = `<option value="ALL">${allLabel}</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join("");
+        el.value = (prev === "ALL" || arr.includes(prev)) ? prev : "ALL";
+    };
+    setFilterSelect("globalFilterYear", "Semua Tahun", dd.years);
+    setFilterSelect("globalFilterSession", "Semua Sesi", dd.sessions);
+    setFilterSelect("globalFilterUnit", "Semua Jabatan / Unit", dd.units);
+    setFilterSelect("globalStatusFilter", "Semua Status Tracking", dd.statuses);
+}
+
+function ensureCustomDropdownValueSaved(category, val) {
+    const clean = (val || "").trim();
+    if (!clean) return;
+    if (!state.dropdowns[category].includes(clean)) {
+        state.dropdowns[category].push(clean);
+    }
+}
+
+function populateFundSelectDropdowns() {
+    populateDynamicDropdowns();
+    const codes = getFundCodes();
+    const entrySelect = document.getElementById("entryFundCode");
+    if (entrySelect) {
+        const cur = entrySelect.value;
+        entrySelect.innerHTML = codes.map(c => `<option value="${c}">${state.funds[c].name} (${c})</option>`).join("");
+        if (codes.includes(cur)) entrySelect.value = cur;
+    }
+    const filterSelect = document.getElementById("globalFundFilter");
+    if (filterSelect) {
+        const curF = filterSelect.value || "ALL";
+        filterSelect.innerHTML = `<option value="ALL">Semua Tabung</option>` + codes.map(c => `<option value="${c}">${c}</option>`).join("");
+        if (curF === "ALL" || codes.includes(curF)) filterSelect.value = curF;
+    }
+}
+
+// ================= URUS SENARAI PILIHAN DROPDOWN (CRUD) =================
+function openDropdownCrudModal(defaultCat = "years") {
+    activeDropdownCategory = defaultCat;
+    switchDropdownCategory(defaultCat);
+    showModal("modalDropdownCrud");
+}
+
+function switchDropdownCategory(cat) {
+    activeDropdownCategory = cat;
+    ["years", "sessions", "units", "statuses"].forEach(k => {
+        const btn = document.getElementById("ddTab-" + k);
+        if (!btn) return;
+        if (k === cat) {
+            btn.className = "px-3 py-1.5 rounded-lg font-extrabold bg-indigo-600 text-white shadow-sm";
+        } else {
+            btn.className = "px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+        }
+    });
+    document.getElementById("newDropdownValueInput").value = "";
+    renderDropdownOptionsCrudList();
+}
+
+function renderDropdownOptionsCrudList() {
+    const list = state.dropdowns[activeDropdownCategory] || [];
+    const container = document.getElementById("dropdownOptionsListContainer");
+    if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada pilihan dalam senarai ini.</div>`;
+        return;
+    }
+
+    container.innerHTML = list.map((item, idx) => `
+        <div class="p-2.5 flex items-center justify-between gap-2 hover:bg-slate-50">
+            <input type="text" id="ddEditInput-${idx}" value="${item.replace(/"/g, '&quot;')}" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:border-teal-600 focus:outline-none" />
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="updateDropdownOption(${idx})" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] flex items-center gap-1" title="Simpan perubahan teks">
+                    <i class="fa-solid fa-check"></i> Simpan
+                </button>
+                <button onclick="deleteDropdownOption(${idx})" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition" title="Padam pilihan ini">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function addNewDropdownOption() {
+    const input = document.getElementById("newDropdownValueInput");
+    const val = (input.value || "").trim();
+    if (!val) {
+        showToast("Sila taip nilai pilihan baharu.");
+        return;
+    }
+    const list = state.dropdowns[activeDropdownCategory];
+    if (list.includes(val)) {
+        showToast("Pilihan tersebut sudah wujud dalam senarai.");
+        return;
+    }
+    list.push(val);
+    input.value = "";
+    saveState();
+    populateDynamicDropdowns();
+    renderDropdownOptionsCrudList();
+    renderAllSheets();
+    showToast(`Pilihan "${val}" ditambah ke dalam dropdown.`);
+}
+
+function updateDropdownOption(index) {
+    const inputEl = document.getElementById(`ddEditInput-${index}`);
+    if (!inputEl) return;
+    const newVal = inputEl.value.trim();
+    const oldVal = state.dropdowns[activeDropdownCategory][index];
+    if (!newVal) {
+        showToast("Nilai pilihan tidak boleh kosong.");
+        return;
+    }
+    state.dropdowns[activeDropdownCategory][index] = newVal;
+
+    // Kemas kini rekod sedia ada yang menggunakan nilai lama
+    const fieldMap = { years: "year", sessions: "session", units: "unit", statuses: "status" };
+    const fieldName = fieldMap[activeDropdownCategory];
+    if (fieldName && oldVal !== newVal) {
+        state.entries.forEach(e => {
+            if (e[fieldName] === oldVal) e[fieldName] = newVal;
+        });
+    }
+
+    saveState();
+    populateDynamicDropdowns();
+    renderDropdownOptionsCrudList();
+    renderAllSheets();
+    showToast(`Pilihan dikemas kini kepada "${newVal}".`);
+}
+
+function deleteDropdownOption(index) {
+    const list = state.dropdowns[activeDropdownCategory];
+    const removed = list[index];
+    list.splice(index, 1);
+    saveState();
+    populateDynamicDropdowns();
+    renderDropdownOptionsCrudList();
+    renderAllSheets();
+    showToast(`Pilihan "${removed}" telah dipadam daripada senarai.`);
+}
+
+// Saringan Aktif (Tahun, Sesi, Unit)
+function getActiveFilters() {
+    return {
+        year: document.getElementById("globalFilterYear").value,
+        session: document.getElementById("globalFilterSession").value,
+        unit: document.getElementById("globalFilterUnit").value
+    };
+}
+
+function getSheetSummary(fundCode) {
+    const fundObj = state.funds[fundCode];
+    const baseMasuk = Number(fundObj?.allocatedMasuk || 0);
+    const f = getActiveFilters();
+
+    const rows = state.entries.filter(e => {
+        if (e.fund !== fundCode) return false;
+        if (f.year !== "ALL" && e.year !== f.year) return false;
+        if (f.session !== "ALL" && e.session !== f.session) return false;
+        if (f.unit !== "ALL" && e.unit !== f.unit) return false;
+        return true;
+    });
+
+    const extraMasuk = rows.reduce((s, r) => s + Number(r.masuk || 0), 0);
+    const totalKeluar = rows.reduce((s, r) => s + Number(r.keluar || 0), 0);
+    const totalMasuk = baseMasuk + extraMasuk;
+    const bakiSemasa = totalMasuk - totalKeluar;
+    const activityRows = rows.filter(r => r.type === "KELUAR");
+    const selesaiCount = activityRows.filter(r => r.status === "Selesai & Laporan Lengkap").length;
+
+    return { fundObj, baseMasuk, extraMasuk, totalMasuk, totalKeluar, bakiSemasa, rows, totalActivities: activityRows.length, selesaiCount };
+}
+
+function renderBottomTabs() {
+    const codes = getFundCodes();
+    const container = document.getElementById("bottomSheetTabsContainer");
+    if (!container) return;
+
+    let html = `
+        <button onclick="switchSheetTab('PERUNTUKAN')" class="px-3.5 py-1.5 rounded-t-lg text-xs ${activeSheet === 'PERUNTUKAN' ? 'font-extrabold border border-slate-300 bg-white text-teal-700 shadow-sm' : 'font-bold text-slate-600 hover:bg-slate-100'} flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-table-list text-teal-600"></i> PERUNTUKAN
+        </button>
+    `;
+    codes.forEach(code => {
+        const s = getSheetSummary(code);
+        const isActive = activeSheet === code;
+        html += `
+            <button onclick="switchSheetTab('${code}')" class="px-3 py-1.5 rounded-t-lg text-xs ${isActive ? 'font-extrabold border border-slate-300 bg-white text-teal-700 shadow-sm' : 'font-bold text-slate-600 hover:bg-slate-100'} flex items-center gap-1.5 shrink-0">
+                <i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i>
+                <span>${s.fundObj.name}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 font-mono">${formatRM(s.bakiSemasa)}</span>
+            </button>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function renderAllSheets() {
+    populateFundSelectDropdowns();
+    renderBottomTabs();
+
+    const codes = getFundCodes();
+    const isAdmin = currentUser.role === "ADMIN";
+    let grandActivities = 0, grandSelesai = 0;
+    let topPillsHtml = "", cardsHtml = "";
+
+    const summaryRowsHtml = codes.map((code, idx) => {
+        const s = getSheetSummary(code);
+        grandActivities += s.totalActivities;
+        grandSelesai += s.selesaiCount;
+
+        topPillsHtml += `
+            <div onclick="switchSheetTab('${code}')" class="cursor-pointer px-2.5 py-0.5 border-r last:border-r-0 border-slate-700 hover:bg-slate-800 rounded transition shrink-0">
+                <span class="text-slate-400 text-[10px] font-bold block">${code}</span>
+                <strong class="text-emerald-400 font-mono">${formatRM(s.bakiSemasa)}</strong>
+            </div>
+        `;
+
+        cardsHtml += `
+            <div class="bg-white p-4 rounded-xl border border-slate-300 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 font-extrabold text-[10px]">${code}</span>
+                        <span class="text-[11px] font-bold text-indigo-700">${s.selesaiCount}/${s.totalActivities} Selesai</span>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-900 mt-1.5">${s.fundObj.name}</h3>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-100 text-xs">
+                    <div><span class="text-[10px] text-slate-400 block">Masuk</span><strong class="text-emerald-700">${formatRM(s.totalMasuk)}</strong></div>
+                    <div><span class="text-[10px] text-slate-400 block">Keluar</span><strong class="text-rose-600">${formatRM(s.totalKeluar)}</strong></div>
+                    <div class="bg-amber-50 px-2 py-1 rounded border border-amber-200"><span class="text-[10px] text-amber-900 block font-bold">Baki</span><strong class="text-slate-950">${formatRM(s.bakiSemasa)}</strong></div>
+                </div>
+            </div>
+        `;
+
+        const masukInput = isAdmin ? `<input type="number" step="0.01" value="${s.baseMasuk}" onchange="updateFundBaseAllocation('${code}', this.value)" class="excel-input" />` : formatRM(s.totalMasuk);
+
+        return `
+            <tr class="hover:bg-slate-50">
+                <td class="py-3 px-3 text-center font-bold">${idx + 1}</td>
+                <td class="py-3 px-4">
+                    <div class="font-extrabold text-slate-900">${s.fundObj.name}</div>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Kod: ${code}</span>
+                </td>
+                <td class="py-3 px-4 text-slate-600">${s.fundObj.waranRef}</td>
+                <td class="py-3 px-4 text-right">${masukInput}</td>
+                <td class="py-3 px-4 text-right font-bold text-rose-600">${formatRM(s.totalKeluar)}</td>
+                <td class="py-3 px-4 text-right font-extrabold text-teal-800 bg-teal-50/30">${formatRM(s.bakiSemasa)}</td>
+                <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">${s.selesaiCount}/${s.totalActivities}</span></td>
+                <td class="py-3 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="switchSheetTab('${code}')" class="bg-slate-800 hover:bg-teal-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg" title="Buka Buku Tunai">Buka</button>
+                        <button onclick="openSheetCrudModal('${code}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1.5 rounded-lg" title="Edit Tab Sheet">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteSheet('${code}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1.5 rounded-lg transition" title="Padam Tab Sheet">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    document.getElementById("topSeparateFundsBar").innerHTML = topPillsHtml;
+    document.getElementById("separateFundCardsGrid").innerHTML = cardsHtml;
+    document.getElementById("totalActivitiesHeaderBadge").textContent = `${grandSelesai} / ${grandActivities} Aktiviti Selesai`;
+    document.getElementById("peruntukanMainTableBody").innerHTML = summaryRowsHtml;
+
+    renderMasterTrackingTable();
+
+    if (codes.includes(activeSheet)) {
+        renderActiveLedgerSheet(activeSheet);
+    }
+}
+
+function renderMasterTrackingTable() {
+    const q = (document.getElementById("globalSearchInput")?.value || "").toLowerCase();
+    const statusFilter = document.getElementById("globalStatusFilter")?.value || "ALL";
+    const fundFilter = document.getElementById("globalFundFilter")?.value || "ALL";
+    const f = getActiveFilters();
+
+    const filtered = state.entries.filter(e => {
+        if (e.type !== "KELUAR") return false;
+        if (fundFilter !== "ALL" && e.fund !== fundFilter) return false;
+        if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
+        if (f.year !== "ALL" && e.year !== f.year) return false;
+        if (f.session !== "ALL" && e.session !== f.session) return false;
+        if (f.unit !== "ALL" && e.unit !== f.unit) return false;
+        if (q && !(`${e.title} ${e.fileNo} ${e.unit}`.toLowerCase().includes(q))) return false;
+        return true;
+    });
+
+    const tbody = document.getElementById("masterTrackingTableBody");
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tiada rekod aktiviti mengikut saringan terpilih.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(e => `
+        <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-extrabold text-xs text-teal-800">${e.fund}</td>
+            <td class="py-2.5 px-3 font-semibold">${e.year} <br><span class="text-[10px] text-slate-500">${e.session}</span></td>
+            <td class="py-2.5 px-3 text-slate-600">${e.date}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">${e.title}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-600">${e.fileNo}</td>
+            <td class="py-2.5 px-3 text-slate-700">${e.unit}</td>
+            <td class="py-2.5 px-3 text-right font-bold text-rose-600">${formatRM(e.keluar)}</td>
+            <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100">${e.status}</span></td>
+            <td class="py-2.5 px-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                    <button onclick="openTrackingDrawer('${e.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold px-2 py-1 rounded" title="Tracking Aktiviti">Tracking</button>
+                    <button onclick="openEditEntryModal('${e.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded" title="Edit Perkara">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="confirmDeleteEntry('${e.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1 rounded transition" title="Padam Perkara">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function renderActiveLedgerSheet(fundCode) {
+    const s = getSheetSummary(fundCode);
+    if (!s.fundObj) return;
+    const isAdmin = currentUser.role === "ADMIN";
+
+    document.getElementById("ledgerBadgeCode").textContent = fundCode;
+    document.getElementById("ledgerSheetTitle").textContent = `BUKU TUNAI: ${s.fundObj.name}`;
+    document.getElementById("sheetTotalMasuk").textContent = formatRM(s.totalMasuk);
+    document.getElementById("sheetTotalKeluar").textContent = formatRM(s.totalKeluar);
+    document.getElementById("sheetTotalBaki").textContent = formatRM(s.bakiSemasa);
+    document.getElementById("sheetTotalCount").textContent = `${s.rows.length} Rekod`;
+
+    let runningBaki = s.baseMasuk;
+    const baseMasukCell = isAdmin
+        ? `<input type="number" step="0.01" value="${s.baseMasuk}" onchange="updateFundBaseAllocation('${fundCode}', this.value)" class="excel-input" title="Taip untuk ubah Dana Masuk Induk" />`
+        : formatRM(s.baseMasuk);
+
+    let rowsHtml = `
+        <tr class="bg-amber-50/70">
+            <td class="py-2.5 px-2.5 text-center font-bold">1</td>
+            <td class="py-2.5 px-3 font-mono">01/01/2026</td>
+            <td class="py-2.5 px-3">2026 / Semua</td>
+            <td class="py-2.5 px-3 font-extrabold text-slate-900">PERUNTUKAN DITERIMA (DANA MASUK INDUK)</td>
+            <td class="py-2.5 px-3 font-mono">${s.fundObj.waranRef}</td>
+            <td class="py-2.5 px-3">JHEP (Induk)</td>
+            <td class="py-2.5 px-3 text-right font-extrabold text-emerald-700">${baseMasukCell}</td>
+            <td class="py-2.5 px-3 text-right">-</td>
+            <td class="py-2.5 px-3 text-right font-extrabold bg-slate-100">${formatRM(runningBaki)}</td>
+            <td class="py-2.5 px-3">Aktif</td>
+            <td class="py-2.5 px-3 text-center">
+                <button onclick="openSheetCrudModal('${fundCode}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded" title="Edit Dana Masuk Induk / Waran">
+                    <i class="fa-solid fa-pen"></i> Edit Induk
+                </button>
+            </td>
+        </tr>
+    `;
+
+    s.rows.forEach((r, idx) => {
+        const m = Number(r.masuk || 0), k = Number(r.keluar || 0);
+        runningBaki = runningBaki + m - k;
+        rowsHtml += `
+            <tr class="hover:bg-slate-50">
+                <td class="py-2.5 px-2.5 text-center">${idx + 2}</td>
+                <td class="py-2.5 px-3 font-mono">${r.date}</td>
+                <td class="py-2.5 px-3 font-semibold">${r.year} <br><span class="text-[10px] text-slate-500">${r.session}</span></td>
+                <td class="py-2.5 px-3 font-bold text-slate-900">${r.title}</td>
+                <td class="py-2.5 px-3 font-mono">${r.fileNo}</td>
+                <td class="py-2.5 px-3">${r.unit}</td>
+                <td class="py-2.5 px-3 text-right text-emerald-700 font-bold">${m > 0 ? formatRM(m) : '-'}</td>
+                <td class="py-2.5 px-3 text-right text-rose-600 font-bold">${k > 0 ? formatRM(k) : '-'}</td>
+                <td class="py-2.5 px-3 text-right font-extrabold bg-slate-50">${formatRM(runningBaki)}</td>
+                <td class="py-2.5 px-3">${r.status}</td>
+                <td class="py-2.5 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="openTrackingDrawer('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] px-2 py-1 rounded font-bold" title="Tracking">Tracking</button>
+                        <button onclick="openEditEntryModal('${r.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] px-2 py-1 rounded font-bold" title="Edit Perkara">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteEntry('${r.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] px-2 py-1 rounded font-bold transition" title="Padam Perkara">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("ledgerTableBody").innerHTML = rowsHtml;
+    document.getElementById("ledgerTableFoot").innerHTML = `
+        <tr>
+            <td colspan="6" class="py-3 px-4 text-right uppercase">JUMLAH KESELURUHAN (MENGIKUT SARINGAN)</td>
+            <td class="py-3 px-3 text-right text-emerald-700">${formatRM(s.totalMasuk)}</td>
+            <td class="py-3 px-3 text-right text-rose-600">${formatRM(s.totalKeluar)}</td>
+            <td class="py-3 px-3 text-right text-teal-900 bg-amber-100">${formatRM(s.bakiSemasa)}</td>
+            <td colspan="2"></td>
+        </tr>
+    `;
+}
+
+function switchSheetTab(sheetName) {
+    activeSheet = sheetName;
+    document.getElementById("sheet-PERUNTUKAN").classList.toggle("hidden", sheetName !== "PERUNTUKAN");
+    document.getElementById("sheet-LEDGER").classList.toggle("hidden", sheetName === "PERUNTUKAN");
+    renderAllSheets();
+}
+
+// ================= EKSPORT LAPORAN (PDF, WORD, EXCEL) =================
+function openExportReportModal() {
+    const f = getActiveFilters();
+    document.getElementById("exportReportInfoSummary").innerHTML = `Tahun: <strong>${f.year}</strong> | Sesi: <strong>${f.session}</strong> | Jabatan/Unit: <strong>${f.unit}</strong>`;
+    showModal("modalExportReport");
+}
+
+function executeExportReport() {
+    const format = document.getElementById("exportFormatSelect").value;
+    closeModal("modalExportReport");
+
+    if (format === "PDF") {
+        printActiveSheetPDF();
+    } else if (format === "WORD") {
+        downloadWordReport();
+    } else if (format === "EXCEL") {
+        downloadExcelCSV();
+    }
+}
+
+function printActiveSheetPDF() {
+    const codes = getFundCodes();
+    const f = getActiveFilters();
+    let html = `<div style="padding:28px;font-family:sans-serif;color:#111;">
+        <h2>JABATAN HAL EHWAL PELAJAR (JHEP) — LAPORAN KEWANGAN & AKTIVITI</h2>
+        <p style="font-size:12px;">Saringan: Tahun [${f.year}] | Sesi [${f.session}] | Unit [${f.unit}]</p><hr>`;
+
+    codes.forEach(c => {
+        const s = getSheetSummary(c);
+        html += `<h3>Tabung: ${s.fundObj.name}</h3>
+        <p style="font-size:11px;">Masuk: ${formatRM(s.totalMasuk)} | Keluar: ${formatRM(s.totalKeluar)} | Baki: ${formatRM(s.bakiSemasa)}</p>
+        <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:15px;">
+            <tr style="background:#eee;"><th style="border:1px solid #333;padding:4px;">Tarikh</th><th style="border:1px solid #333;padding:4px;">Sesi</th><th style="border:1px solid #333;padding:4px;">Perkara</th><th style="border:1px solid #333;padding:4px;">Unit</th><th style="border:1px solid #333;padding:4px;">Keluar (RM)</th></tr>`;
+        s.rows.forEach(r => {
+            html += `<tr><td style="border:1px solid #333;padding:4px;">${r.date}</td><td style="border:1px solid #333;padding:4px;">${r.session}</td><td style="border:1px solid #333;padding:4px;">${r.title}</td><td style="border:1px solid #333;padding:4px;">${r.unit}</td><td style="border:1px solid #333;padding:4px;text-align:right;">${formatRM(r.keluar)}</td></tr>`;
+        });
+        html += `</table>`;
+    });
+    html += `</div>`;
+
+    const printArea = document.getElementById("printArea");
+    printArea.innerHTML = html;
+    printArea.classList.remove("hidden");
+    window.print();
+    printArea.classList.add("hidden");
+}
+
+function downloadWordReport() {
+    const f = getActiveFilters();
+    let content = `<html><head><meta charset="utf-8"><title>Laporan JHEP</title></head><body style="font-family:Arial;">`;
+    content += `<h2>Laporan Rasmi Kewangan & Aktiviti JHEP</h2><p>Tahun: ${f.year} | Sesi: ${f.session} | Unit: ${f.unit}</p>`;
+    
+    getFundCodes().forEach(c => {
+        const s = getSheetSummary(c);
+        content += `<h3>${s.fundObj.name}</h3><p>Baki Semasa: ${formatRM(s.bakiSemasa)}</p>`;
+    });
+    content += `</body></html>`;
+
+    const blob = new Blob(['\ufeff' + content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_JHEP_${f.year}_${f.session}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast("Dokumen Word berjaya dimuat turun.");
+}
+
+function downloadExcelCSV() {
+    let csv = "Tabung,Tahun,Sesi,Tarikh,Perkara,No Fail,Unit,Keluar (RM),Status\n";
+    state.entries.forEach(e => {
+        csv += `"${e.fund}","${e.year}","${e.session}","${e.date}","${e.title}","${e.fileNo}","${e.unit}",${e.keluar},"${e.status}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `IDANA_JHEP_BukuTunai.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast("Fail Excel / CSV berjaya dimuat turun.");
+}
+
+// ================= ADD / EDIT / DELETE ENTRY (PERKARA) =================
+function openNewActivityModal(defaultType = "KELUAR") {
+    populateFundSelectDropdowns();
+    document.getElementById("modalEntryHeading").textContent = "Tambah Rekod Buku Tunai Baharu";
+    document.getElementById("editingEntryId").value = "";
+    if (activeSheet !== "PERUNTUKAN" && state.funds[activeSheet]) {
+        document.getElementById("entryFundCode").value = activeSheet;
+    }
+    document.getElementById("entryType").value = defaultType;
+    document.getElementById("entryYear").value = state.dropdowns.years[0] || "2026";
+    document.getElementById("entrySession").value = state.dropdowns.sessions[0] || "Sesi 1/2026";
+    document.getElementById("entryDate").value = new Date().toISOString().split("T")[0];
+    document.getElementById("entryUnit").value = state.dropdowns.units[0] || "JHEP (Induk)";
+    document.getElementById("entryTrackingStatus").value = state.dropdowns.statuses[0] || "Kertas Kerja Diluluskan";
+    document.getElementById("entryAmount").value = "";
+    document.getElementById("entryTitle").value = "";
+    document.getElementById("entryFileNo").value = "";
+    showModal("modalNewEntry");
+}
+
+function openAddFundSourceModal() {
+    openNewActivityModal("MASUK");
+}
+
+function openEditEntryModal(entryId) {
+    const e = state.entries.find(item => item.id === entryId);
+    if (!e) return;
+    populateFundSelectDropdowns();
+    document.getElementById("modalEntryHeading").textContent = "Kemaskini / Edit Perkara";
+    document.getElementById("editingEntryId").value = e.id;
+    document.getElementById("entryFundCode").value = e.fund;
+    document.getElementById("entryType").value = e.type;
+    document.getElementById("entryYear").value = e.year || "2026";
+    document.getElementById("entrySession").value = e.session || "Sesi 1/2026";
+    document.getElementById("entryDate").value = e.date;
+    document.getElementById("entryTitle").value = e.title;
+    document.getElementById("entryFileNo").value = e.fileNo;
+    document.getElementById("entryUnit").value = e.unit;
+    document.getElementById("entryAmount").value = e.type === "MASUK" ? e.masuk : e.keluar;
+    document.getElementById("entryTrackingStatus").value = e.status;
+    showModal("modalNewEntry");
+}
+
+function saveLedgerEntry() {
+    const editingId = document.getElementById("editingEntryId").value;
+    const fund = document.getElementById("entryFundCode").value;
+    const type = document.getElementById("entryType").value;
+    const year = (document.getElementById("entryYear").value || "2026").trim();
+    const session = (document.getElementById("entrySession").value || "Sesi 1/2026").trim();
+    const date = document.getElementById("entryDate").value;
+    const amount = Number(document.getElementById("entryAmount").value || 0);
+    const title = document.getElementById("entryTitle").value.trim();
+    const fileNo = document.getElementById("entryFileNo")?.value.trim() || "JHEP/2026/01";
+    const unit = (document.getElementById("entryUnit").value || "JHEP (Induk)").trim();
+    const status = (document.getElementById("entryTrackingStatus").value || "Kertas Kerja Diluluskan").trim();
+
+    if (!title || amount <= 0) {
+        showToast("Sila isi Perkara dan Amaun.");
+        return;
+    }
+
+    // Jika pengguna menaip Tahun / Sesi / Unit / Status baharu, simpan secara automatik ke dalam senarai dropdown
+    ensureCustomDropdownValueSaved("years", year);
+    ensureCustomDropdownValueSaved("sessions", session);
+    ensureCustomDropdownValueSaved("units", unit);
+    ensureCustomDropdownValueSaved("statuses", status);
+
+    if (editingId) {
+        const existing = state.entries.find(item => item.id === editingId);
+        if (existing) {
+            existing.fund = fund;
+            existing.type = type;
+            existing.year = year;
+            existing.session = session;
+            existing.date = date;
+            existing.title = title;
+            existing.fileNo = fileNo;
+            existing.unit = unit;
+            existing.masuk = type === "MASUK" ? amount : 0;
+            existing.keluar = type === "KELUAR" ? amount : 0;
+            existing.status = status;
+            existing.timeline = existing.timeline || [];
+            existing.timeline.push({ time: "Dikemas kini", stage: status, note: `Perkara dikemas kini (${formatRM(amount)})`, user: currentUser.name });
+        }
+        showToast("Rekod perkara berjaya dikemas kini.");
+    } else {
+        const newEntry = {
+            id: "ENT-" + Date.now(),
+            fund, type, year, session, date, title, fileNo, unit,
+            masuk: type === "MASUK" ? amount : 0,
+            keluar: type === "KELUAR" ? amount : 0,
+            status: type === "MASUK" ? "Selesai & Laporan Lengkap" : status,
+            notes: "",
+            timeline: [{ time: "Baru direkod", stage: "Didaftarkan", note: title, user: currentUser.name }]
+        };
+        state.entries.push(newEntry);
+        showToast("Rekod baharu berjaya disimpan.");
+    }
+
+    saveState();
+    closeModal("modalNewEntry");
+    renderAllSheets();
+}
+
+function confirmDeleteEntry(entryId) {
+    const e = state.entries.find(item => item.id === entryId);
+    if (!e) return;
+    document.getElementById("confirmDeleteTitle").textContent = "Padam Perkara / Transaksi?";
+    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam rekod <strong>"${e.title}"</strong> berjumlah <strong>${formatRM(e.keluar || e.masuk)}</strong> daripada tabung <strong>${e.fund}</strong>?`;
+    const btn = document.getElementById("confirmDeleteBtn");
+    btn.onclick = function() {
+        state.entries = state.entries.filter(item => item.id !== entryId);
+        saveState();
+        closeModal("modalConfirmDelete");
+        renderAllSheets();
+        showToast("Perkara telah berjaya dipadam.");
+    };
+    showModal("modalConfirmDelete");
+}
+
+function updateFundBaseAllocation(fundCode, val) {
+    state.funds[fundCode].allocatedMasuk = Math.max(0, Number(val || 0));
+    saveState();
+    renderAllSheets();
+    showToast("Peruntukan diterima dikemas kini.");
+}
+
+function openTrackingDrawer(id) {
+    selectedEntryId = id;
+    const e = state.entries.find(item => item.id === id);
+    if (!e) return;
+    document.getElementById("trkSheetBadge").textContent = e.fund;
+    document.getElementById("trkFileNo").textContent = e.fileNo;
+    document.getElementById("trkTitle").textContent = e.title;
+    document.getElementById("trkYearSession").textContent = `${e.year} / ${e.session}`;
+    document.getElementById("trkDate").textContent = e.date;
+    document.getElementById("trkUnit").textContent = e.unit;
+    document.getElementById("trkAmount").textContent = formatRM(e.keluar || e.masuk);
+    document.getElementById("trkStatusSelect").value = e.status;
+    
+    document.getElementById("trkTimelineList").innerHTML = (e.timeline || []).map(t => `
+        <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+            <strong>${t.stage}</strong> (${t.time}) — ${t.note}
+        </div>
+    `).join("");
+
+    showModal("modalTrackingDrawer");
+}
+
+function saveActivityTrackingUpdate() {
+    const e = state.entries.find(item => item.id === selectedEntryId);
+    if (!e) return;
+    const s = (document.getElementById("trkStatusSelect").value || "Dalam Pelaksanaan").trim();
+    const note = document.getElementById("trkNewNote").value.trim() || `Status: ${s}`;
+    ensureCustomDropdownValueSaved("statuses", s);
+    e.status = s;
+    e.timeline.push({ time: "Hari ini", stage: s, note, user: currentUser.name });
+    saveState();
+    closeModal("modalTrackingDrawer");
+    renderAllSheets();
+    showToast("Tracking dikemas kini.");
+}
+
+// ================= SHEET CRUD MODAL (ADD / EDIT / DELETE TAB SHEET) =================
+function resetSheetCrudForm() {
+    document.getElementById("sheetFormBadge").textContent = "+ Tambah Tab Sheet Baharu";
+    document.getElementById("sheetOriginalCode").value = "";
+    document.getElementById("sheetCodeInput").value = "";
+    document.getElementById("sheetCodeInput").disabled = false;
+    document.getElementById("sheetNameInput").value = "";
+    document.getElementById("sheetWaranInput").value = "";
+    document.getElementById("sheetMasukInput").value = "";
+}
+
+function renderExistingSheetsCrudList() {
+    const listEl = document.getElementById("existingSheetsCrudList");
+    if (!listEl) return;
+    const codes = getFundCodes();
+    if (codes.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada Tab Sheet. Sila tambah di atas.</div>`;
+        return;
+    }
+    listEl.innerHTML = codes.map(code => {
+        const f = state.funds[code];
+        const count = state.entries.filter(e => e.fund === code).length;
+        return `
+            <div class="p-3 bg-white hover:bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-mono font-extrabold text-[11px]">${code}</span>
+                        <strong class="text-slate-900 font-bold">${f.name}</strong>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">
+                        Waran: ${f.waranRef || '-'} · Dana Induk: <strong>${formatRM(f.allocatedMasuk)}</strong> · ${count} Rekod
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="populateSheetFormForEdit('${code}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button onclick="confirmDeleteSheet('${code}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1 transition">
+                        <i class="fa-solid fa-trash-can"></i> Padam Tab
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function populateSheetFormForEdit(code) {
+    const f = state.funds[code];
+    if (!f) return;
+    document.getElementById("sheetFormBadge").textContent = `Kemaskini Tab Sheet: ${code}`;
+    document.getElementById("sheetOriginalCode").value = code;
+    document.getElementById("sheetCodeInput").value = f.code;
+    document.getElementById("sheetNameInput").value = f.name;
+    document.getElementById("sheetWaranInput").value = f.waranRef || "";
+    document.getElementById("sheetMasukInput").value = f.allocatedMasuk || 0;
+}
+
+function openSheetCrudModal(editCode = null) {
+    resetSheetCrudForm();
+    renderExistingSheetsCrudList();
+    if (editCode && state.funds[editCode]) {
+        populateSheetFormForEdit(editCode);
+    }
+    showModal("modalSheetCrud");
+}
+
+function saveSheetCrudForm() {
+    const origCode = document.getElementById("sheetOriginalCode").value.trim();
+    const code = document.getElementById("sheetCodeInput").value.trim().toUpperCase().replace(/\s+/g, "_");
+    const name = document.getElementById("sheetNameInput").value.trim();
+    const waranRef = document.getElementById("sheetWaranInput").value.trim() || "Waran Peruntukan";
+    const masuk = Number(document.getElementById("sheetMasukInput").value || 0);
+
+    if (!code || !name) {
+        showToast("Sila isi Kod Tab dan Nama Penuh Tab Sheet.");
+        return;
+    }
+
+    if (origCode && origCode !== code) {
+        delete state.funds[origCode];
+        state.entries.forEach(e => {
+            if (e.fund === origCode) e.fund = code;
+        });
+        if (activeSheet === origCode) activeSheet = code;
+    }
+
+    state.funds[code] = { code, name, waranRef, allocatedMasuk: masuk };
+    saveState();
+    resetSheetCrudForm();
+    renderExistingSheetsCrudList();
+    renderAllSheets();
+    showToast(`Tab Sheet ${code} berjaya disimpan.`);
+}
+
+function confirmDeleteSheet(code) {
+    const f = state.funds[code];
+    if (!f) return;
+    const codes = getFundCodes();
+    if (codes.length <= 1) {
+        showToast("Sekurang-kurangnya satu Tab Sheet perlu dikekalkan.");
+        return;
+    }
+    const relatedCount = state.entries.filter(e => e.fund === code).length;
+    document.getElementById("confirmDeleteTitle").textContent = `Padam Tab Sheet "${f.name}"?`;
+    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam Tab Sheet <strong>${f.name} (${code})</strong> bersama <strong>${relatedCount} rekod transaksi</strong> di dalamnya?`;
+    const btn = document.getElementById("confirmDeleteBtn");
+    btn.onclick = function() {
+        delete state.funds[code];
+        state.entries = state.entries.filter(e => e.fund !== code);
+        if (activeSheet === code) {
+            activeSheet = "PERUNTUKAN";
+            document.getElementById("sheet-PERUNTUKAN").classList.remove("hidden");
+            document.getElementById("sheet-LEDGER").classList.add("hidden");
+        }
+        saveState();
+        closeModal("modalConfirmDelete");
+        closeModal("modalSheetCrud");
+        renderAllSheets();
+        showToast(`Tab Sheet ${code} telah dipadam.`);
+    };
+    showModal("modalConfirmDelete");
+}
+
+function applyRoleLogin() {
+    const r = document.getElementById("roleSelectInput").value;
+    currentUser.role = r;
+    currentUser.name = r === "ADMIN" ? "Super Admin" : "Staf Unit";
+    document.getElementById("currentRoleBadge").textContent = r;
+    document.getElementById("currentUserName").textContent = currentUser.name;
+    closeModal("loginModal");
+    renderAllSheets();
+    showToast(`Log masuk sebagai ${currentUser.name}`);
+}
+
+function openLoginModal() { showModal("loginModal"); }
+function showModal(id) { document.getElementById(id).classList.remove("hidden"); document.getElementById(id).classList.add("flex"); }
+function closeModal(id) { document.getElementById(id).classList.add("hidden"); document.getElementById(id).classList.remove("flex"); }
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    document.getElementById("toastText").textContent = msg;
+    t.classList.remove("hidden"); t.classList.add("flex");
+    setTimeout(() => { t.classList.add("hidden"); t.classList.remove("flex"); }, 3000);
+}
+
+window.onload = function() {
+    renderAllSheets();
+    updateCloudStatusBadge(getGasWebAppUrl() ? "Tersambung" : "Setup Google Sheet", getGasWebAppUrl() ? "SUCCESS" : "READY");
+    if (getGasWebAppUrl()) {
+        syncFromGoogleSheet(false);
+    }
+};
+</script>
+</body>
+</html>
