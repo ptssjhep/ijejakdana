@@ -110,6 +110,9 @@
             <i id="cloudSyncIcon" class="fa-solid fa-cloud-arrow-up"></i>
             <span id="cloudSyncStatusText" class="hidden md:inline">Google Sheet Sync</span>
         </button>
+        <button onclick="switchSheetTab('UNIT_LEDGER')" class="bg-teal-600 hover:bg-teal-500 text-white text-xs font-extrabold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition" title="Buka Tab Terima & Belanja Mengikut Jabatan / Unit">
+            <i class="fa-solid fa-building-user"></i> <span class="hidden sm:inline">Terima & Belanja Unit</span>
+        </button>
         <button onclick="openDropdownCrudModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition" title="Tambah, Edit atau Padam senarai Tahun, Sesi, Unit & Status">
             <i class="fa-solid fa-sliders"></i> <span class="hidden sm:inline">Dropdown</span>
         </button>
@@ -309,6 +312,136 @@
         </div>
     </section>
 
+    <!-- ================= SHEET 3: TAB TERIMA & BELANJA JABATAN / UNIT (CRUD PENUH) ================= -->
+    <section id="sheet-UNIT_LEDGER" class="hidden space-y-5">
+        <!-- Header & Kawalan CRUD Jabatan / Unit -->
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm p-5">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-extrabold text-xs">
+                            <i class="fa-solid fa-building-user mr-1"></i> TAB JABATAN / UNIT
+                        </span>
+                        <button onclick="openUnitAccountCrudModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 font-bold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-building-circle-arrow-right"></i> + Tambah / Urus Jabatan & Unit (CRUD)
+                        </button>
+                    </div>
+                    <h2 class="text-lg font-extrabold text-slate-900 mt-1">TERIMA & BELANJA MENGIKUT JABATAN / UNIT</h2>
+                    <p class="text-xs text-slate-500">Pantau agihan peruntukan diterima (Terima), perbelanjaan program (Belanja), dan baki terkini bagi setiap Jabatan atau Unit.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openNewUnitTransactionModal('MASUK')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-arrow-down"></i> + Rekod Terima (Unit)
+                    </button>
+                    <button onclick="openNewUnitTransactionModal('KELUAR')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-arrow-up"></i> + Rekod Belanja (Unit)
+                    </button>
+                    <button onclick="openExportReportModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-export"></i> Eksport
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kad Ringkasan Keseluruhan Terima & Belanja Unit -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+                <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                    <span class="text-[11px] text-emerald-800 font-semibold block">JUMLAH TERIMA UNIT (RM)</span>
+                    <span id="unitGrandTerima" class="text-lg font-extrabold text-emerald-700">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-rose-50 border border-rose-200">
+                    <span class="text-[11px] text-rose-800 font-semibold block">JUMLAH BELANJA UNIT (RM)</span>
+                    <span id="unitGrandBelanja" class="text-lg font-extrabold text-rose-600">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-amber-50 border border-amber-300">
+                    <span class="text-[11px] text-amber-900 font-bold block">BAKI SEMASA UNIT (RM)</span>
+                    <span id="unitGrandBaki" class="text-lg font-extrabold text-slate-900">RM 0.00</span>
+                </div>
+                <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                    <span class="text-[11px] text-indigo-800 font-semibold block">BILANGAN JABATAN / UNIT</span>
+                    <span id="unitGrandCount" class="text-lg font-extrabold text-indigo-700">0 Unit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jadual 1: Ringkasan Terima & Belanja Mengikut Jabatan / Unit (CRUD Jabatan/Unit) -->
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
+            <div class="bg-slate-800 text-white px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wide">JADUAL RINGKASAN TERIMA & BELANJA MENGIKUT JABATAN / UNIT</h3>
+                    <p class="text-[11px] text-slate-300">Super Admin boleh taip terus <strong>Peruntukan Awal Unit (RM)</strong> pada kotak kuning atau klik nama unit untuk tapis buku tunai di bawah.</p>
+                </div>
+                <button onclick="openUnitAccountCrudModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-lg shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> + Tambah / Edit Jabatan & Unit
+                </button>
+            </div>
+            <div class="overflow-x-auto p-4">
+                <table class="w-full border-collapse excel-table">
+                    <thead>
+                        <tr>
+                            <th class="py-2.5 px-3 text-center w-10">BIL</th>
+                            <th class="py-2.5 px-4 text-left">NAMA JABATAN / UNIT PELAKSANA</th>
+                            <th class="py-2.5 px-4 text-left">CATATAN / RUJUKAN AGIHAN UNIT</th>
+                            <th class="py-2.5 px-4 text-right w-44">TERIMA AWAL UNIT (RM)</th>
+                            <th class="py-2.5 px-4 text-right w-40">TAMBAHAN TERIMA (RM)</th>
+                            <th class="py-2.5 px-4 text-right w-40">JUMLAH TERIMA (RM)</th>
+                            <th class="py-2.5 px-4 text-right w-40">JUMLAH BELANJA (RM)</th>
+                            <th class="py-2.5 px-4 text-right w-40">BAKI UNIT (RM)</th>
+                            <th class="py-2.5 px-3 text-center w-28">AKTIVITI</th>
+                            <th class="py-2.5 px-3 text-center w-48">TINDAKAN (CRUD)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unitSummaryTableBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Jadual 2: Buku Tunai Terperinci Terima & Belanja Mengikut Jabatan / Unit Terpilih -->
+        <div class="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-300 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase">BUKU TUNAI TERPERINCI TERIMA & BELANJA JABATAN / UNIT</h3>
+                        <span id="selectedUnitFilterBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[11px] font-bold">Semua Jabatan / Unit</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Senarai transaksi duit terima (Masuk) dan duit belanja (Keluar) beserta baki berturutan dan CRUD penuh.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="unitLedgerSelectFilter" onchange="setFocusedUnitFilter(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-extrabold text-indigo-900"></select>
+                    <select id="unitLedgerTypeFilter" onchange="renderUnitLedgerSection()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold">
+                        <option value="ALL">Semua (Terima & Belanja)</option>
+                        <option value="MASUK">Terima Sahaja (Duit Masuk)</option>
+                        <option value="KELUAR">Belanja Sahaja (Duit Keluar)</option>
+                    </select>
+                    <button onclick="openNewUnitTransactionModal('KELUAR')" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Tambah Rekod Unit
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto p-4">
+                <table class="w-full border-collapse excel-table">
+                    <thead>
+                        <tr>
+                            <th class="py-2.5 px-2.5 text-center w-10">BIL</th>
+                            <th class="py-2.5 px-3 text-left w-28">TARIKH</th>
+                            <th class="py-2.5 px-3 text-left w-28">TAHUN / SESI</th>
+                            <th class="py-2.5 px-3 text-left w-44">JABATAN / UNIT</th>
+                            <th class="py-2.5 px-3 text-left w-28">SUMBER TABUNG</th>
+                            <th class="py-2.5 px-3 text-left">PERKARA (TERIMA / BELANJA AKTIVITI)</th>
+                            <th class="py-2.5 px-3 text-left w-32">NO. FAIL</th>
+                            <th class="py-2.5 px-3 text-right w-36">TERIMA / MASUK (RM)</th>
+                            <th class="py-2.5 px-3 text-right w-36">BELANJA / KELUAR (RM)</th>
+                            <th class="py-2.5 px-3 text-right w-36">BAKI (RM)</th>
+                            <th class="py-2.5 px-3 text-left w-36">STATUS</th>
+                            <th class="py-2.5 px-3 text-center w-40">TINDAKAN (CRUD)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unitDetailedLedgerBody" class="divide-y divide-slate-200"></tbody>
+                    <tfoot id="unitDetailedLedgerFoot" class="bg-slate-100 font-extrabold text-xs"></tfoot>
+                </table>
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <!-- ================= BOTTOM EXCEL WORKBOOK SHEET TABS BAR ================= -->
@@ -357,7 +490,7 @@
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">ampelkan Web App URL (`https://script.google.com/macros/s/.../exec`) di sini:</label>
+                <label class="block font-bold text-slate-700 mb-1">Tampelkan Web App URL (`https://script.google.com/macros/s/.../exec`) di sini:</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input type="url" id="gasWebAppUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 bg-white font-mono text-xs focus:border-emerald-600 focus:outline-none">
                     <button onclick="saveGasWebAppUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm shrink-0">
@@ -507,6 +640,17 @@
                     <input type="text" id="entryTrackingStatus" list="dlStatuses" placeholder="Pilih atau taip status..." class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:border-teal-600 focus:outline-none">
                 </div>
             </div>
+
+            <!-- Pautan Pantas Kertas Kerja & Laporan semasa Tambah/Edit -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                <div class="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
+                    <i class="fa-brands fa-google-drive text-emerald-600"></i> Pautan Pantas Google Drive (Pilihan — Boleh juga muat naik fail terus melalui butang "Drive/Fail")
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="url" id="entryKertasKerjaUrl" placeholder="Pautan Drive Kertas Kerja (jika ada)..." class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-[11px]">
+                    <input type="url" id="entryLaporanUrl" placeholder="Pautan Drive Laporan Program (jika ada)..." class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-[11px]">
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
@@ -605,65 +749,119 @@
     </div>
 </div>
 
+<!-- ================= MODAL 1D: CRUD JABATAN / UNIT (TERIMA & BELANJA UNIT) ================= -->
+<div id="modalUnitAccountCrud" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900">Urus Jabatan / Unit & Agihan Terima Awal (CRUD)</h3>
+                <p class="text-xs text-slate-500">Tambah Jabatan/Unit baharu, kemas kini peruntukan diterima awal, atau padam unit yang tidak berkaitan.</p>
+            </div>
+            <button onclick="closeModal('modalUnitAccountCrud')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+                <h4 id="unitAccountFormBadge" class="font-extrabold text-indigo-900 uppercase">+ Tambah / Kemas Kini Jabatan atau Unit</h4>
+                <button onclick="resetUnitAccountCrudForm()" class="text-[11px] text-slate-500 hover:text-slate-800 underline font-semibold">Reset Borang</button>
+            </div>
+            <input type="hidden" id="unitOriginalName" value="">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1">Nama Jabatan / Unit Pelaksana</label>
+                    <input type="text" id="unitNameCrudInput" placeholder="Cth: Unit Keusahawanan & Inovasi" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-bold bg-white">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Terima Awal Unit (RM)</label>
+                    <input type="number" step="0.01" id="unitInitialTerimaInput" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-extrabold text-right bg-amber-50">
+                </div>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Catatan / Rujukan Agihan Terima Unit</label>
+                <input type="text" id="unitRefNoteInput" placeholder="Cth: Agihan Peruntukan Tahunan Unit 2026" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+            </div>
+            <div class="flex justify-end pt-1">
+                <button onclick="saveUnitAccountCrudForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Jabatan / Unit
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-2 text-xs">
+            <h4 class="font-extrabold text-slate-700 uppercase">Senarai Jabatan / Unit Sedia Ada (Klik Edit atau Padam):</h4>
+            <div id="existingUnitsCrudList" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden bg-white"></div>
+        </div>
+    </div>
+</div>
+
 <!-- ================= MODAL PENGESAHAN PADAM (TIADA ALERT BROWSER) ================= -->
 <div id="modalConfirmDelete" class="fixed inset-0 bg-slate-900/70 z-50 hidden items-center justify-center p-4 no-print">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-rose-200">
         <div class="flex items-center gap-3 text-rose-600">
-            <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            <div class="w-11 h-11 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
             </div>
             <div>
-                <h3 id="confirmDeleteTitle" class="text-base font-extrabold text-slate-900">Sahkan Padam</h3>
-                <p id="confirmDeleteDesc" class="text-xs text-slate-500 mt-0.5">Tindakan ini tidak boleh dikembalikan.</p>
+                <h3 id="confirmDeleteTitle" class="text-base font-extrabold text-slate-900">Pengesahan Padam</h3>
+                <p class="text-xs text-slate-500">Tindakan ini tidak boleh diundur selepas dipadam.</p>
             </div>
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+        <div id="confirmDeleteDesc" class="text-xs text-slate-700 bg-rose-50/70 border border-rose-200 p-3.5 rounded-xl">
+            Adakah anda pasti mahu memadam rekod ini?
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
             <button onclick="closeModal('modalConfirmDelete')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-            <button id="confirmDeleteBtn" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-trash-can"></i> Ya, Padam Sekarang
+            <button id="confirmDeleteBtn" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 shadow-sm flex items-center justify-center min-w-[140px] transition">
+                <i class="fa-solid fa-trash-can mr-1"></i> Ya, Padam Sekarang
             </button>
         </div>
     </div>
 </div>
 
-<!-- ================= MODAL 2: EKSPORT LAPORAN LENGKAP (PDF, WORD, EXCEL) ================= -->
-<div id="modalExportReport" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+<!-- ================= MODAL 2: EKSPORT & CETAK LAPORAN (PDF, WORD, EXCEL) ================= -->
+<div id="modalExportReport" class="fixed inset-0 bg-slate-900/70 z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200">
         <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div>
-                <h3 class="text-base font-extrabold text-slate-900">Eksport & Cetak Laporan Lengkap</h3>
-                <p class="text-xs text-slate-500">Pilih format fail dan tetapan saringan semasa untuk dimuat turun.</p>
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow">
+                    <i class="fa-solid fa-file-export"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Eksport & Cetak Laporan Lengkap</h3>
+                    <p class="text-xs text-slate-500">Muat turun atau cetak laporan mengikut saringan aktif.</p>
+                </div>
             </div>
             <button onclick="closeModal('modalExportReport')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
 
         <div class="space-y-3 text-xs">
-            <div>
-                <label class="block font-bold text-slate-600 mb-1">Format Fail Eksport</label>
-                <select id="exportFormatSelect" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold">
-                    <option value="PDF">Dokumen PDF (Cetak / Simpan PDF)</option>
-                    <option value="WORD">Dokumen Microsoft Word (.doc)</option>
-                    <option value="EXCEL">Helaian Microsoft Excel (.xls / CSV)</option>
-                </select>
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                <span class="font-bold text-slate-500 uppercase text-[10px] block mb-1">Saringan Laporan Semasa:</span>
+                <div id="exportReportInfoSummary" class="font-extrabold text-slate-800">Semua Tahun | Semua Sesi | Semua Jabatan</div>
             </div>
-            <div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-teal-900 space-y-1">
-                <div class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Saringan Terpakai:</div>
-                <p id="exportReportInfoSummary" class="text-teal-800 font-medium"></p>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1.5">Pilih Format Laporan:</label>
+                <select id="exportFormatSelect" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 bg-white font-extrabold text-slate-800 focus:border-teal-600 focus:outline-none">
+                    <option value="PDF">📄 Cetak / Simpan sebagai PDF (Saiz A4)</option>
+                    <option value="EXCEL">📊 Muat Turun Fail Microsoft Excel (.xls)</option>
+                    <option value="WORD">📝 Muat Turun Fail Microsoft Word (.doc)</option>
+                </select>
             </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
             <button onclick="closeModal('modalExportReport')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-            <button onclick="executeExportReport()" class="px-5 py-2 rounded-lg text-xs font-extrabold bg-teal-600 text-white hover:bg-teal-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-download"></i> Muat Turun / Cetak Sekarang
+            <button onclick="executeExportReport()" class="px-4 py-2 rounded-lg text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 shadow-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-download"></i> Jana & Muat Turun Laporan
             </button>
         </div>
     </div>
 </div>
 
-<!-- ================= MODAL 3: TRACKING DRAWER ================= -->
+<!-- ================= MODAL 3: TRACKING & UPLOAD GOOGLE DRIVE DRAWER ================= -->
 <div id="modalTrackingDrawer" class="fixed inset-0 bg-slate-900/65 z-50 hidden items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-300">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] overflow-hidden shadow-2xl flex flex-col border border-slate-300">
         <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
             <div>
                 <div class="flex items-center gap-2">
@@ -676,8 +874,8 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-            <div class="grid grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+        <div class="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div>
                     <span class="text-slate-400 text-[10px] block">Tahun / Sesi</span>
                     <strong id="trkYearSession" class="text-slate-800">2026 / Sesi 1</strong>
@@ -695,12 +893,64 @@
                     <strong id="trkAmount" class="text-rose-600 font-extrabold">RM 0.00</strong>
                 </div>
             </div>
+
+            <!-- BAHAGIAN MUAT NAIK KERTAS KERJA & LAPORAN KE GOOGLE DRIVE -->
+            <div class="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                            <i class="fa-brands fa-google-drive text-base"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 uppercase text-xs">Muat Naik Kertas Kerja, Laporan & Dokumen ke Google Drive</h4>
+                            <p class="text-[11px] text-slate-600">Pilih fail (PDF, Word, Excel, Gambar) untuk dimuat naik terus ke folder Google Drive JHEP atau tampal pautan Drive sedia ada.</p>
+                        </div>
+                    </div>
+                    <span id="trkDocsCountBadge" class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[11px]">0 Dokumen</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 bg-white p-3.5 rounded-xl border border-emerald-200">
+                    <div class="md:col-span-3">
+                        <label class="block font-bold text-slate-700 mb-1 text-[11px]">Kategori Dokumen</label>
+                        <select id="driveDocCategory" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 font-extrabold text-slate-800">
+                            <option value="Kertas Kerja">📄 Kertas Kerja</option>
+                            <option value="Laporan Pelaksanaan">📊 Laporan Pelaksanaan</option>
+                            <option value="Surat Kelulusan">✅ Surat / Minit Kelulusan</option>
+                            <option value="Resit & Kewangan">🧾 Resit / Invois Bayaran</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="block font-bold text-slate-700 mb-1 text-[11px]">Pilih Fail dari Komputer / Telefon (Auto-Upload ke Drive)</label>
+                        <input type="file" id="driveFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-[11px] file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block font-bold text-slate-700 mb-1 text-[11px]">Atau Tampal Link Google Drive (Pilihan)</label>
+                        <input type="url" id="driveManualUrlInput" placeholder="https://drive.google.com/..." class="w-full border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-[11px]">
+                    </div>
+                    <div class="md:col-span-9">
+                        <input type="text" id="driveDocTitleInput" placeholder="Nama / Catatan Dokumen (Cth: Kertas Kerja Kem Kepimpinan MPP 2026.pdf)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 bg-white text-[11px]">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button id="btnUploadDriveNow" onclick="uploadDocumentToGoogleDrive()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Muat Naik ke Drive
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Senarai Dokumen Kertas Kerja & Laporan yang telah dimuat naik -->
+                <div class="space-y-1.5">
+                    <div class="font-bold text-slate-700 text-[11px] uppercase">Senarai Fail Kertas Kerja & Laporan Tersimpan:</div>
+                    <div id="trkDocumentsList" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <!-- Kemas Kini Status Tracking -->
             <div class="p-4 rounded-xl border border-slate-200 space-y-3">
                 <div class="flex items-center justify-between">
                     <h4 class="font-extrabold text-slate-800 uppercase text-[11px]">Kemas Kini Status Tracking (Pilih atau Taip Terus)</h4>
                     <button type="button" onclick="openDropdownCrudModal('statuses')" class="text-[11px] text-indigo-600 hover:underline font-bold">Urus Senarai Status</button>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input type="text" id="trkStatusSelect" list="dlStatuses" placeholder="Pilih atau taip status..." class="border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold focus:border-teal-600 focus:outline-none">
                     <input type="text" id="trkNewNote" placeholder="Catatan kemas kini..." class="border border-slate-300 rounded-lg px-3 py-2">
                 </div>
@@ -708,6 +958,7 @@
                     <button onclick="saveActivityTrackingUpdate()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-lg">Kemas Kini Status</button>
                 </div>
             </div>
+
             <div>
                 <h4 class="font-extrabold text-slate-800 uppercase text-[11px] mb-2">Timeline Jejak Aktiviti</h4>
                 <div id="trkTimelineList" class="space-y-2"></div>
@@ -732,6 +983,7 @@ let currentUser = { role: "ADMIN", name: "Super Admin" };
 let activeSheet = "PERUNTUKAN";
 let selectedEntryId = null;
 let activeDropdownCategory = "years";
+let focusedUnitFilter = "ALL";
 let isCloudSyncing = false;
 
 const DEFAULT_DROPDOWNS = {
@@ -747,47 +999,65 @@ const DEFAULT_DROPDOWNS = {
     statuses: [
         "Kertas Kerja Diluluskan",
         "Dalam Pelaksanaan",
-        "Menunggu Laporan / Resit",
         "Selesai & Laporan Lengkap"
     ]
 };
 
 const DEFAULT_STATE = {
     dropdowns: JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS)),
+    unitAccounts: {
+        "JHEP (Induk)": { name: "JHEP (Induk)", allocatedTerima: 25000, refNote: "Agihan Pengurusan Induk JHEP 2026" },
+        "Unit Kepimpinan & Pembangunan Pelajar": { name: "Unit Kepimpinan & Pembangunan Pelajar", allocatedTerima: 35000, refNote: "Agihan Aktiviti Kepimpinan 2026" },
+        "Unit Kebajikan & Perkhidmatan": { name: "Unit Kebajikan & Perkhidmatan", allocatedTerima: 20000, refNote: "Agihan Bantuan & Kebajikan Unit" },
+        "Unit Sukan & Kebudayaan": { name: "Unit Sukan & Kebudayaan", allocatedTerima: 30000, refNote: "Agihan Sukan & Kebudayaan Pelajar" },
+        "Majlis Perwakilan Pelajar (MPP)": { name: "Majlis Perwakilan Pelajar (MPP)", allocatedTerima: 40000, refNote: "Peruntukan Aktiviti Tahunan MPP" }
+    },
     funds: {
         KEBAJIKAN: { code: "KEBAJIKAN", name: "BANTUAN KEBAJIKAN PELAJAR", allocatedMasuk: 30000, waranRef: "Waran Tabung Kebajikan 2026" },
-        OS42000: { code: "OS42000", name: "OS42000 (AKTIVITI PELAJAR)", allocatedMasuk: 100000, waranRef: "Waran Peruntukan OS42000 Bil. 1/2026" },
+        OS42000: { code: "OS42000", name: "OS42000 (AKTIVITI PELAJAR)", allocatedMasuk: 120000, waranRef: "Waran Peruntukan OS42000 Bil. 1/2026" },
         SAKP: { code: "SAKP", name: "AKAUN AMANAH SAKP", allocatedMasuk: 65000, waranRef: "Peruntukan Akaun Amanah SAKP" }
     },
     entries: [
         {
-            id: "ENT-101", fund: "KEBAJIKAN", type: "KELUAR", year: "2026", session: "Sesi 1/2026", date: "2026-01-22",
-            title: "Bantuan Kecemasan Bencana Pelajar", fileNo: "JHEP.KEB/2026/01", unit: "Unit Kebajikan & Perkhidmatan",
-            masuk: 0, keluar: 3500, status: "Selesai & Laporan Lengkap",
-            timeline: [{ time: "22/01/2026", stage: "Selesai & Laporan Lengkap", note: "Bayaran telah diselesaikan", user: "Super Admin" }]
+            id: "ENT-101",
+            fund: "KEBAJIKAN",
+            type: "KELUAR",
+            year: "2026",
+            session: "Sesi 1/2026",
+            date: "2026-01-22",
+            title: "Bantuan Kecemasan Bencana Pelajar",
+            fileNo: "JHEP.KEB/2026/01",
+            unit: "Unit Kebajikan & Perkhidmatan",
+            masuk: 0,
+            keluar: 3500,
+            status: "Selesai & Laporan Lengkap",
+            documents: [
+                { id: "DOC-1", category: "Kertas Kerja", name: "Kertas_Kerja_Bantuan_Bencana_2026.pdf", url: "https://drive.google.com/drive/my-drive", uploadedAt: "20/01/2026", by: "Super Admin" },
+                { id: "DOC-2", category: "Laporan Pelaksanaan", name: "Laporan_Agihan_Bantuan_Pelajar.pdf", url: "https://drive.google.com/drive/my-drive", uploadedAt: "25/01/2026", by: "Staf Unit" }
+            ],
+            logs: [{ time: "22/01/2026 09:30", actor: "Super Admin", note: "Disalurkan kepada pelajar terlibat" }]
         },
         {
-            id: "ENT-201", fund: "OS42000", type: "KELUAR", year: "2026", session: "Sesi 1/2026", date: "2026-02-05",
-            title: "Kem Kepimpinan MPP & Jawatankuasa Pelajar", fileNo: "JHEP.OS42/2026/04", unit: "Majlis Perwakilan Pelajar (MPP)",
-            masuk: 0, keluar: 8500, status: "Selesai & Laporan Lengkap",
-            timeline: [{ time: "05/02/2026", stage: "Selesai & Laporan Lengkap", note: "Laporan lengkap diterima", user: "Super Admin" }]
-        },
-        {
-            id: "ENT-202", fund: "OS42000", type: "KELUAR", year: "2025", session: "Sesi 2/2025", date: "2025-10-14",
-            title: "Kejohanan Sukan Antara Jabatan", fileNo: "JHEP.OS42/2025/19", unit: "Unit Sukan & Kebudayaan",
-            masuk: 0, keluar: 6000, status: "Dalam Pelaksanaan",
-            timeline: [{ time: "14/10/2025", stage: "Dalam Pelaksanaan", note: "Kertas kerja diluluskan", user: "Staf Unit" }]
-        },
-        {
-            id: "ENT-301", fund: "SAKP", type: "KELUAR", year: "2026", session: "Sesi 2/2026", date: "2026-03-10",
-            title: "Bengkel Pengurusan Organisasi & Kewangan Kelab", fileNo: "JHEP.SAKP/2026/02", unit: "Unit Kepimpinan & Pembangunan Pelajar",
-            masuk: 0, keluar: 4800, status: "Menunggu Laporan / Resit",
-            timeline: [{ time: "10/03/2026", stage: "Menunggu Laporan / Resit", note: "Menunggu penyerahan resit rasmi", user: "Staf Unit" }]
+            id: "ENT-201",
+            fund: "OS42000",
+            type: "KELUAR",
+            year: "2026",
+            session: "Sesi 1/2026",
+            date: "2026-02-05",
+            title: "Kem Kepimpinan Majlis Perwakilan Pelajar (MPP) 2026",
+            fileNo: "JHEP.600-3/2/01",
+            unit: "Majlis Perwakilan Pelajar (MPP)",
+            masuk: 0,
+            keluar: 12500,
+            status: "Selesai & Laporan Lengkap",
+            documents: [
+                { id: "DOC-3", category: "Kertas Kerja", name: "Kertas_Kerja_Kem_Kepimpinan_MPP_2026.pdf", url: "https://drive.google.com/drive/my-drive", uploadedAt: "01/02/2026", by: "Super Admin" },
+                { id: "DOC-4", category: "Laporan Pelaksanaan", name: "Laporan_Penuh_Kem_MPP_2026.pdf", url: "https://drive.google.com/drive/my-drive", uploadedAt: "12/02/2026", by: "Penyelaras Unit" }
+            ],
+            logs: [{ time: "05/02/2026 10:00", actor: "Super Admin", note: "Kelulusan penuh OS42000" }]
         }
     ]
 };
-
-let state = loadState();
 
 function loadState() {
     try {
@@ -800,14 +1070,28 @@ function loadState() {
         if (!parsed.dropdowns) {
             parsed.dropdowns = JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS));
         }
+        if (!parsed.unitAccounts) {
+            parsed.unitAccounts = JSON.parse(JSON.stringify(DEFAULT_STATE.unitAccounts));
+        }
+        (parsed.dropdowns.units || []).forEach(u => {
+            if (!parsed.unitAccounts[u]) {
+                parsed.unitAccounts[u] = { name: u, allocatedTerima: 0, refNote: "Agihan Peruntukan Unit" };
+            }
+        });
         if (!Array.isArray(parsed.entries)) {
             parsed.entries = [];
         }
+        parsed.entries.forEach(e => {
+            if (!Array.isArray(e.documents)) e.documents = [];
+            if (!Array.isArray(e.logs)) e.logs = [];
+        });
         return parsed;
     } catch (e) {
         return JSON.parse(JSON.stringify(DEFAULT_STATE));
     }
 }
+
+let state = loadState();
 
 function saveState(skipCloudSync = false) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -816,314 +1100,230 @@ function saveState(skipCloudSync = false) {
     }
 }
 
-// ================= INTEGRASI AUTOMATIK GOOGLE SHEETS (APPS SCRIPT API) =================
 function getGasWebAppUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramUrl = urlParams.get("gas_url");
-    if (paramUrl && paramUrl.startsWith("https://script.google.com/")) {
-        localStorage.setItem(GAS_URL_STORAGE_KEY, paramUrl.trim());
-        return paramUrl.trim();
+    const params = new URLSearchParams(window.location.search);
+    const urlFromQuery = params.get("gas_url");
+    if (urlFromQuery && urlFromQuery.startsWith("https://script.google.com/")) {
+        localStorage.setItem(GAS_URL_STORAGE_KEY, urlFromQuery.trim());
+        return urlFromQuery.trim();
     }
     return (localStorage.getItem(GAS_URL_STORAGE_KEY) || "").trim();
 }
 
-function updateCloudStatusBadge(statusText, statusType = "READY") {
-    const textEl = document.getElementById("cloudSyncStatusText");
-    const iconEl = document.getElementById("cloudSyncIcon");
-    const infoEl = document.getElementById("syncLastTimestampInfo");
-    const url = getGasWebAppUrl();
+function setCloudStatusUI(status, message) {
+    const icon = document.getElementById("cloudSyncIcon");
+    const text = document.getElementById("cloudSyncStatusText");
+    const info = document.getElementById("syncLastTimestampInfo");
+    if (!icon || !text) return;
 
-    if (textEl) {
-        textEl.textContent = url ? statusText : "Setup Google Sheet";
+    if (status === "SYNCING") {
+        icon.className = "fa-solid fa-spinner fa-spin text-amber-300";
+        text.textContent = "Menyelaras...";
+    } else if (status === "CONNECTED") {
+        icon.className = "fa-solid fa-cloud-check text-emerald-300";
+        text.textContent = "Cloud Aktif";
+    } else {
+        icon.className = "fa-solid fa-cloud-arrow-up";
+        text.textContent = "Google Sheet Sync";
     }
-    if (iconEl) {
-        if (statusType === "SYNCING") {
-            iconEl.className = "fa-solid fa-spinner fa-spin";
-        } else if (statusType === "SUCCESS") {
-            iconEl.className = "fa-solid fa-cloud-check";
-        } else if (statusType === "ERROR") {
-            iconEl.className = "fa-solid fa-triangle-exclamation";
-        } else {
-            iconEl.className = "fa-solid fa-cloud-arrow-up";
-        }
+    if (info && message) {
+        info.textContent = message;
     }
-    if (infoEl) {
-        const timeStr = new Date().toLocaleTimeString("ms-MY");
-        infoEl.textContent = url
-            ? `Status Awan: ${statusText} (Kemas kini terakhir: ${timeStr})`
-            : `Belum disambungkan ke Web App URL. Sila tampal URL Google Apps Script di atas.`;
-    }
-}
-
-function openGoogleSheetSetupModal() {
-    const urlInput = document.getElementById("gasWebAppUrlInput");
-    if (urlInput) urlInput.value = getGasWebAppUrl();
-    const codeArea = document.getElementById("gasScriptCodeTextarea");
-    if (codeArea) codeArea.value = generateGoogleAppsScriptCode();
-    showModal("modalGoogleSheetSetup");
-}
-
-function saveGasWebAppUrl() {
-    const input = document.getElementById("gasWebAppUrlInput");
-    const url = (input?.value || "").trim();
-    if (!url) {
-        localStorage.removeItem(GAS_URL_STORAGE_KEY);
-        updateCloudStatusBadge("Setup Google Sheet", "READY");
-        showToast("URL Google Apps Script telah dikosongkan.");
-        return;
-    }
-    localStorage.setItem(GAS_URL_STORAGE_KEY, url);
-    updateCloudStatusBadge("Tersambung", "SUCCESS");
-    showToast("Web App URL disimpan! Menyelaras data dengan Google Sheet...");
-    syncToGoogleSheet(true);
 }
 
 async function syncToGoogleSheet(showNotification = false) {
-    const url = getGasWebAppUrl();
-    if (!url || isCloudSyncing) return;
-
+    const gasUrl = getGasWebAppUrl();
+    if (!gasUrl) {
+        if (showNotification) {
+            showToast("Sila masukkan Google Apps Script Web App URL terlebih dahulu.");
+        }
+        return;
+    }
     try {
         isCloudSyncing = true;
-        updateCloudStatusBadge("Menyimpan ke Sheet...", "SYNCING");
-
+        setCloudStatusUI("SYNCING", "Sedang menghantar & menyusun tab automatik ke Google Sheet...");
         const payload = {
-            action: "SYNC_ALL",
+            action: "SYNC_PUSH",
             sheetId: GOOGLE_SHEET_ID,
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.name,
+            updatedAt: new Date().toLocaleString("ms-MY"),
             state: state
         };
-
-        const response = await fetch(url, {
+        const res = await fetch(gasUrl, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
-
-        const result = await response.json();
-        if (result && result.status === "success") {
-            updateCloudStatusBadge("Disimpan di Sheet", "SUCCESS");
-            if (showNotification) {
-                showToast("Semua Tab Sheet & Rekod berjaya disegerakkan ke Google Sheet!");
-            }
+        const data = await res.json();
+        isCloudSyncing = false;
+        if (data && data.ok) {
+            setCloudStatusUI("CONNECTED", `Berjaya diselaraskan ke Google Sheet (${new Date().toLocaleTimeString("ms-MY")})`);
+            if (showNotification) showToast("Database Google Sheet telah dikemas kini secara automatik!");
         } else {
-            updateCloudStatusBadge("Ralat Sync", "ERROR");
-            if (showNotification) showToast("Ralat semasa menghantar ke Google Sheet.");
+            setCloudStatusUI("IDLE", "Ralat semasa menulis ke Google Sheet.");
+            if (showNotification) showToast("Gagal menyelaraskan ke Google Sheet.");
         }
     } catch (err) {
-        updateCloudStatusBadge(" Luar Talian / Semak URL", "ERROR");
-        if (showNotification) {
-            showToast("Gagal menghubungi Web App URL. Pastikan akses disetkan kepada 'Anyone'.");
-        }
-    } finally {
         isCloudSyncing = false;
+        setCloudStatusUI("IDLE", "Tidak dapat menghubungi Web App URL. Data disimpan secara lokal.");
+        if (showNotification) showToast("Ralat sambungan ke Google Apps Script.");
     }
 }
 
 async function syncFromGoogleSheet(showNotification = false) {
-    const url = getGasWebAppUrl();
-    if (!url) {
-        if (showNotification) openGoogleSheetSetupModal();
+    const gasUrl = getGasWebAppUrl();
+    if (!gasUrl) {
+        if (showNotification) {
+            openGoogleSheetSetupModal();
+            showToast("Sila tetapkan Web App URL untuk menarik data dari Google Sheet.");
+        }
         return;
     }
-
     try {
         isCloudSyncing = true;
-        updateCloudStatusBadge("Menarik Data...", "SYNCING");
+        setCloudStatusUI("SYNCING", "Sedang menarik data terkini dari Google Sheet...");
+        const res = await fetch(`${gasUrl}?action=SYNC_PULL&sheetId=${encodeURIComponent(GOOGLE_SHEET_ID)}&t=${Date.now()}`);
+        const data = await res.json();
+        isCloudSyncing = false;
 
-        const response = await fetch(`${url}?action=GET_ALL&sheetId=${GOOGLE_SHEET_ID}&t=${Date.now()}`);
-        const result = await response.json();
-
-        if (result && result.status === "success" && result.state && result.state.funds) {
-            state = result.state;
+        if (data && data.ok && data.state && data.state.funds) {
+            state = data.state;
             if (!state.dropdowns) state.dropdowns = JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS));
+            if (!state.unitAccounts) state.unitAccounts = JSON.parse(JSON.stringify(DEFAULT_STATE.unitAccounts));
             if (!Array.isArray(state.entries)) state.entries = [];
-            saveState(true);
+            saveState(true); // Don't push back to cloud immediately
             renderAllSheets();
-            updateCloudStatusBadge("Data Terkini", "SUCCESS");
-            if (showNotification) {
-                showToast("Data terkini daripada Google Sheet berjaya dimuat turun!");
-            }
-        } else if (result && result.status === "empty") {
-            await syncToGoogleSheet(false);
-            updateCloudStatusBadge("Auto-Setup Selesai", "SUCCESS");
-            if (showNotification) {
-                showToast("Google Sheet baharu dikesan — data permulaan telah dijana secara automatik!");
-            }
+            setCloudStatusUI("CONNECTED", `Data terkini ditarik dari Google Sheet (${new Date().toLocaleTimeString("ms-MY")})`);
+            if (showNotification) showToast("Data terkini berjaya ditarik dari Google Sheet!");
+        } else if (data && data.ok && data.empty) {
+            await syncToGoogleSheet(showNotification);
+        } else {
+            setCloudStatusUI("IDLE", "Tiada data baharu ditemui.");
         }
     } catch (err) {
-        updateCloudStatusBadge("Mod Simpanan Lokal", "ERROR");
-        if (showNotification) {
-            showToast("Tidak dapat menarik data dari Google Sheet. Semak sambungan atau URL.");
-        }
-    } finally {
         isCloudSyncing = false;
+        setCloudStatusUI("IDLE", "Gagal menarik data dari Google Sheet.");
+        if (showNotification) showToast("Tidak dapat menarik data dari Google Sheet.");
     }
-}
-
-function copyGasScriptCode() {
-    const textarea = document.getElementById("gasScriptCodeTextarea");
-    if (!textarea) return;
-    textarea.select();
-    document.execCommand("copy");
-    showToast("Kod Google Apps Script (Code.gs) berjaya disalin!");
 }
 
 function generateGoogleAppsScriptCode() {
     return `/**
  * ============================================================================
- * SISTEM IDANA JHEP (iJejak Dana) — AUTO DATABASE & MULTI-DEVICE SYNC
- * ID Google Sheet: ${GOOGLE_SHEET_ID}
+ * GOOGLE APPS SCRIPT (Code.gs) — AUTO SETUP & MULTI-DEVICE DATABASE
+ * Sistem IDANA JHEP (iJejak Dana)
+ * Google Sheet ID: ${GOOGLE_SHEET_ID}
  * ============================================================================
- * Skrip ini membina dan mengemas kini semua Tab Sheet secara automatik:
- * 1. DB_JSON_STATE (Simpanan struktur penuh untuk penyelarasan pantas Desktop/Mobile/Tablet)
- * 2. PERUNTUKAN (Jadual induk peruntukan setiap tabung)
- * 3. SEMUA_TRANSAKSI (Rekod penuh semua buku tunai & status tracking)
- * 4. Tab Buku Tunai Berasingan mengikut kod tabung (KEBAJIKAN, OS42000, SAKP, dll.)
  */
-
 const SPREADSHEET_ID = "${GOOGLE_SHEET_ID}";
 
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let dbSheet = ss.getSheetByName("DB_JSON_STATE");
-    if (!dbSheet) {
-      setupInitialSheets(ss);
-      return jsonResponse({ status: "empty", message: "Database baharu telah disediakan." });
-    }
+    ensureDatabaseSheets(ss);
+    const dbSheet = ss.getSheetByName("DB_STATE_JSON");
     const rawJson = dbSheet.getRange("A2").getValue();
     if (!rawJson) {
-      return jsonResponse({ status: "empty", message: "Tiada data lagi." });
+      return jsonResponse({ ok: true, empty: true });
     }
     return jsonResponse({
-      status: "success",
+      ok: true,
       updatedAt: dbSheet.getRange("B2").getValue(),
       state: JSON.parse(rawJson)
     });
   } catch (err) {
-    return jsonResponse({ status: "error", message: err.toString() });
+    return jsonResponse({ ok: false, error: err.toString() });
   }
 }
 
 function doPost(e) {
   try {
-    const payload = JSON.parse(e.postData.contents);
+    const body = JSON.parse(e.postData.contents || "{}");
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const state = payload.state;
+    ensureDatabaseSheets(ss);
 
-    if (!state || !state.funds) {
-      return jsonResponse({ status: "error", message: "Format data tidak sah." });
+    // Sokongan Muat Naik Fail Kertas Kerja & Laporan Terus ke Google Drive
+    if (body.action === "UPLOAD_DRIVE_FILE") {
+      const folderName = "IDANA_JHEP_DOKUMEN_" + (body.year || "SEMASA");
+      const folders = DriveApp.getFoldersByName(folderName);
+      const mainFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+
+      const decoded = Utilities.base64Decode(body.base64Data);
+      const blob = Utilities.newBlob(decoded, body.mimeType || "application/pdf", body.fileName);
+      const driveFile = mainFolder.createFile(blob);
+      driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+      return jsonResponse({
+        ok: true,
+        fileId: driveFile.getId(),
+        fileUrl: driveFile.getUrl(),
+        fileName: driveFile.getName()
+      });
     }
 
-    // 1. Simpan JSON State penuh untuk penyelarasan pantas semua peranti
-    let dbSheet = ss.getSheetByName("DB_JSON_STATE");
-    if (!dbSheet) dbSheet = ss.insertSheet("DB_JSON_STATE");
-    dbSheet.clear();
-    dbSheet.getRange("A1:C1").setValues([["STATE_JSON", "UPDATED_AT", "UPDATED_BY"]]).setFontWeight("bold");
-    dbSheet.getRange("A2:C2").setValues([[JSON.stringify(state), new Date().toISOString(), payload.updatedBy || "Sistem"]]);
-
-    // 2. Jana & Kemas kini Tab Induk: PERUNTUKAN
-    syncPeruntukanSheet(ss, state);
-
-    // 3. Jana & Kemas kini Tab Induk: SEMUA_TRANSAKSI
-    syncMasterTransactionsSheet(ss, state);
-
-    // 4. Jana & Kemas kini Setiap Tab Buku Tunai Mengikut Tabung
-    syncIndividualFundSheets(ss, state);
-
-    return jsonResponse({ status: "success", message: "Database Google Sheet berjaya dikemas kini secara automatik." });
+    if (body.state) {
+      const dbSheet = ss.getSheetByName("DB_STATE_JSON");
+      dbSheet.getRange("A2").setValue(JSON.stringify(body.state));
+      dbSheet.getRange("B2").setValue(body.updatedAt || new Date().toISOString());
+      rebuildReadableSheets(ss, body.state);
+    }
+    return jsonResponse({ ok: true, syncedAt: new Date().toISOString() });
   } catch (err) {
-    return jsonResponse({ status: "error", message: err.toString() });
+    return jsonResponse({ ok: false, error: err.toString() });
   }
 }
 
-function setupInitialSheets(ss) {
-  let dbSheet = ss.getSheetByName("DB_JSON_STATE");
-  if (!dbSheet) {
-    dbSheet = ss.insertSheet("DB_JSON_STATE");
-    dbSheet.getRange("A1:C1").setValues([["STATE_JSON", "UPDATED_AT", "UPDATED_BY"]]).setFontWeight("bold");
+function ensureDatabaseSheets(ss) {
+  let db = ss.getSheetByName("DB_STATE_JSON");
+  if (!db) {
+    db = ss.insertSheet("DB_STATE_JSON");
+    db.getRange("A1:B1").setValues([["STATE_JSON", "LAST_UPDATED"]]).setFontWeight("bold");
   }
 }
 
-function syncPeruntukanSheet(ss, state) {
-  let sheet = ss.getSheetByName("PERUNTUKAN");
-  if (!sheet) sheet = ss.insertSheet("PERUNTUKAN");
-  sheet.clear();
+function rebuildReadableSheets(ss, state) {
+  // 1. Tab PERUNTUKAN (Ringkasan Tabung)
+  let pSheet = ss.getSheetByName("PERUNTUKAN") || ss.insertSheet("PERUNTUKAN");
+  pSheet.clear();
+  pSheet.appendRow(["BIL", "KOD TABUNG", "NAMA TABUNG", "RUJUKAN WARAN", "DANA MASUK AWAL (RM)", "TAMBAHAN MASUK (RM)", "JUMLAH MASUK (RM)", "JUMLAH KELUAR (RM)", "BAKI SEMASA (RM)"]);
+  pSheet.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#1e293b").setFontColor("#ffffff");
 
-  const headers = [["BIL", "KOD TABUNG", "NAMA TABUNG / SUMBER PERUNTUKAN", "RUJUKAN WARAN", "DANA MASUK (RM)", "JUMLAH KELUAR (RM)", "BAKI SEMASA (RM)"]];
-  sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#0f172a").setFontColor("#ffffff").setFontWeight("bold");
-
-  const codes = Object.keys(state.funds || {});
-  const rows = codes.map((code, i) => {
-    const f = state.funds[code];
-    const entries = (state.entries || []).filter(e => e.fund === code);
-    const extraMasuk = entries.reduce((sum, r) => sum + Number(r.masuk || 0), 0);
-    const keluar = entries.reduce((sum, r) => sum + Number(r.keluar || 0), 0);
+  const funds = state.funds || {};
+  const entries = state.entries || [];
+  let bil = 1;
+  Object.keys(funds).forEach(function(code) {
+    const f = funds[code];
+    const fEntries = entries.filter(function(r) { return r.fund === code; });
+    const extraMasuk = fEntries.reduce(function(s, r) { return s + Number(r.masuk || 0); }, 0);
+    const totalKeluar = fEntries.reduce(function(s, r) { return s + Number(r.keluar || 0); }, 0);
     const totalMasuk = Number(f.allocatedMasuk || 0) + extraMasuk;
-    const baki = totalMasuk - keluar;
-    return [i + 1, code, f.name, f.waranRef || "-", totalMasuk, keluar, baki];
+    const baki = totalMasuk - totalKeluar;
+    pSheet.appendRow([bil++, code, f.name, f.waranRef || "-", Number(f.allocatedMasuk || 0), extraMasuk, totalMasuk, totalKeluar, baki]);
   });
 
-  if (rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
-    sheet.getRange(2, 5, rows.length, 3).setNumberFormat("#,##0.00");
-  }
-  sheet.autoResizeColumns(1, headers[0].length);
-}
-
-function syncMasterTransactionsSheet(ss, state) {
-  let sheet = ss.getSheetByName("SEMUA_TRANSAKSI");
-  if (!sheet) sheet = ss.insertSheet("SEMUA_TRANSAKSI");
-  sheet.clear();
-
-  const headers = [["ID", "KOD TABUNG", "JENIS", "TAHUN", "SESI", "TARIKH", "PERKARA / NAMA AKTIVITI", "NO. FAIL", "UNIT / JABATAN", "MASUK (RM)", "KELUAR (RM)", "STATUS TRACKING"]];
-  sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#0f172a").setFontColor("#ffffff").setFontWeight("bold");
-
-  const entries = state.entries || [];
-  const rows = entries.map(e => [
-    e.id, e.fund, e.type, e.year || "", e.session || "", e.date || "",
-    e.title || "", e.fileNo || "", e.unit || "", Number(e.masuk || 0), Number(e.keluar || 0), e.status || ""
-  ]);
-
-  if (rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
-    sheet.getRange(2, 10, rows.length, 2).setNumberFormat("#,##0.00");
-  }
-  sheet.autoResizeColumns(1, headers[0].length);
-}
-
-function syncIndividualFundSheets(ss, state) {
-  const codes = Object.keys(state.funds || {});
-  codes.forEach(code => {
-    const f = state.funds[code];
-    const safeName = code.substring(0, 28);
-    let sheet = ss.getSheetByName(safeName);
-    if (!sheet) sheet = ss.insertSheet(safeName);
-    sheet.clear();
-
-    const headers = [["BIL", "TARIKH", "TAHUN / SESI", "PERKARA", "NO. FAIL", "UNIT / JABATAN", "MASUK (RM)", "KELUAR (RM)", "BAKI SEMASA (RM)", "STATUS TRACKING"]];
-    sheet.getRange(1, 1, 1, headers[0].length).setValues(headers).setBackground("#1e293b").setFontColor("#ffffff").setFontWeight("bold");
-
-    let runningBaki = Number(f.allocatedMasuk || 0);
-    const rows = [
-      [1, "01/01/2026", "Semua", "PERUNTUKAN DITERIMA (DANA MASUK INDUK)", f.waranRef || "-", "JHEP (Induk)", runningBaki, 0, runningBaki, "Aktif"]
-    ];
-
-    const fundEntries = (state.entries || []).filter(e => e.fund === code);
-    fundEntries.forEach((r, idx) => {
-      const m = Number(r.masuk || 0);
-      const k = Number(r.keluar || 0);
-      runningBaki = runningBaki + m - k;
-      rows.push([
-        idx + 2, r.date || "", (r.year || "") + " / " + (r.session || ""),
-        r.title || "", r.fileNo || "", r.unit || "", m, k, runningBaki, r.status || ""
-      ]);
-    });
-
-    sheet.getRange(2, 1, rows.length, headers[0].length).setValues(rows);
-    sheet.getRange(2, 7, rows.length, 3).setNumberFormat("#,##0.00");
-    sheet.autoResizeColumns(1, headers[0].length);
+  // 2. Tab TERIMA_BELANJA_UNIT (Ringkasan Mengikut Jabatan / Unit)
+  let uSheet = ss.getSheetByName("TERIMA_BELANJA_UNIT") || ss.insertSheet("TERIMA_BELANJA_UNIT");
+  uSheet.clear();
+  uSheet.appendRow(["BIL", "NAMA JABATAN / UNIT", "CATATAN AGIHAN", "TERIMA AWAL (RM)", "TAMBAHAN TERIMA (RM)", "JUMLAH TERIMA (RM)", "JUMLAH BELANJA (RM)", "BAKI UNIT (RM)"]);
+  uSheet.getRange(1, 1, 1, 8).setFontWeight("bold").setBackground("#312e81").setFontColor("#ffffff");
+  const unitAccounts = state.unitAccounts || {};
+  let uBil = 1;
+  Object.keys(unitAccounts).forEach(function(uName) {
+    const acc = unitAccounts[uName];
+    const uEntries = entries.filter(function(r) { return r.unit === uName; });
+    const extraT = uEntries.reduce(function(s, r) { return s + Number(r.masuk || 0); }, 0);
+    const totalB = uEntries.reduce(function(s, r) { return s + Number(r.keluar || 0); }, 0);
+    const initT = Number(acc.allocatedTerima || 0);
+    const totalT = initT + extraT;
+    uSheet.appendRow([uBil++, uName, acc.refNote || "-", initT, extraT, totalT, totalB, totalT - totalB]);
+  });
+  // 3. Tab SEMUA_TRANSAKSI (Termasuk Pautan Kertas Kerja & Laporan Google Drive)
+  let tSheet = ss.getSheetByName("SEMUA_TRANSAKSI") || ss.insertSheet("SEMUA_TRANSAKSI");
+  tSheet.clear();
+  tSheet.appendRow(["ID", "TABUNG", "JENIS", "TAHUN", "SESI", "TARIKH", "PERKARA / AKTIVITI", "NO. FAIL", "JABATAN / UNIT", "MASUK (RM)", "KELUAR (RM)", "STATUS", "PAUTAN DOKUMEN GOOGLE DRIVE"]);
+  tSheet.getRange(1, 1, 1, 13).setFontWeight("bold").setBackground("#0f766e").setFontColor("#ffffff");
+  entries.forEach(function(r) {
+    const docLinks = (r.documents || []).map(function(d) { return d.category + ": " + d.url; }).join(" | ");
+    tSheet.appendRow([r.id, r.fund, r.type, r.year, r.session, r.date, r.title, r.fileNo, r.unit, Number(r.masuk || 0), Number(r.keluar || 0), r.status, docLinks || "-"]);
   });
 }
 
@@ -1133,37 +1333,100 @@ function jsonResponse(obj) {
 }`;
 }
 
-function formatRM(val) {
-    return "RM " + Number(val || 0).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function openGoogleSheetSetupModal() {
+    document.getElementById("gasWebAppUrlInput").value = getGasWebAppUrl();
+    document.getElementById("gasScriptCodeTextarea").value = generateGoogleAppsScriptCode();
+    showModal("modalGoogleSheetSetup");
 }
 
-function getFundCodes() { return Object.keys(state.funds || {}); }
+function saveGasWebAppUrl() {
+    const val = document.getElementById("gasWebAppUrlInput").value.trim();
+    if (!val) {
+        localStorage.removeItem(GAS_URL_STORAGE_KEY);
+        setCloudStatusUI("IDLE", "Pautan Web App URL telah dikosongkan.");
+        showToast("Web App URL telah dibuang.");
+        return;
+    }
+    localStorage.setItem(GAS_URL_STORAGE_KEY, val);
+    showToast("Web App URL disimpan! Menyelaras ke Google Sheet...");
+    syncToGoogleSheet(true);
+}
 
-function populateDynamicDropdowns() {
-    const dd = state.dropdowns || DEFAULT_DROPDOWNS;
+function copyGasScriptCode() {
+    const textarea = document.getElementById("gasScriptCodeTextarea");
+    textarea.select();
+    document.execCommand("copy");
+    showToast("Kod Google Apps Script (Code.gs) telah disalin!");
+}
 
-    // 1. Datalists untuk borang input (Boleh Pilih & Taip Terus)
-    const setDatalist = (id, arr) => {
+function formatRM(val) {
+    const n = Number(val || 0);
+    return "RM " + n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderEntryDocsPills(entry) {
+    const docs = entry.documents || [];
+    if (docs.length === 0) {
+        return `<span class="text-[10px] text-slate-400 italic">Tiada fail</span>`;
+    }
+    return `<div class="flex flex-wrap gap-1 mt-1">` + docs.map(d => {
+        const isKK = d.category === "Kertas Kerja";
+        const isLap = d.category === "Laporan Pelaksanaan";
+        const badgeCls = isKK
+            ? "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
+            : isLap
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+            : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200";
+        return `<a href="${d.url}" target="_blank" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-bold ${badgeCls}" title="Buka ${d.category}: ${d.name}">
+            <i class="fa-brands fa-google-drive"></i> ${d.category}
+        </a>`;
+    }).join("") + `</div>`;
+}
+
+function getFundCodes() {
+    return Object.keys(state.funds);
+}
+
+function renderDropdownFiltersAndDatalists() {
+    if (!state.dropdowns) {
+        state.dropdowns = JSON.parse(JSON.stringify(DEFAULT_DROPDOWNS));
+    }
+    const { years, sessions, units, statuses } = state.dropdowns;
+
+    const fYear = document.getElementById("globalFilterYear");
+    const fSess = document.getElementById("globalFilterSession");
+    const fUnit = document.getElementById("globalFilterUnit");
+    const fStat = document.getElementById("globalStatusFilter");
+
+    if (fYear) {
+        const curY = fYear.value || "ALL";
+        fYear.innerHTML = `<option value="ALL">Semua Tahun</option>` + years.map(y => `<option value="${y}">${y}</option>`).join("");
+        fYear.value = years.includes(curY) ? curY : "ALL";
+    }
+    if (fSess) {
+        const curS = fSess.value || "ALL";
+        fSess.innerHTML = `<option value="ALL">Semua Sesi</option>` + sessions.map(s => `<option value="${s}">${s}</option>`).join("");
+        fSess.value = sessions.includes(curS) ? curS : "ALL";
+    }
+    if (fUnit) {
+        const curU = fUnit.value || "ALL";
+        fUnit.innerHTML = `<option value="ALL">Semua Jabatan / Unit</option>` + units.map(u => `<option value="${u}">${u}</option>`).join("");
+        fUnit.value = units.includes(curU) ? curU : "ALL";
+    }
+    if (fStat) {
+        const curSt = fStat.value || "ALL";
+        fStat.innerHTML = `<option value="ALL">Semua Status Tracking</option>` + statuses.map(st => `<option value="${st}">${st}</option>`).join("");
+        fStat.value = statuses.includes(curSt) ? curSt : "ALL";
+    }
+
+    const setDl = (id, arr) => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = arr.map(v => `<option value="${v}"></option>`).join("");
+        if (el) el.innerHTML = arr.map(item => `<option value="${item}"></option>`).join("");
     };
-    setDatalist("dlYears", dd.years);
-    setDatalist("dlSessions", dd.sessions);
-    setDatalist("dlUnits", dd.units);
-    setDatalist("dlStatuses", dd.statuses);
-
-    // 2. Penapis (Filter) di Bar Atas & Jadual
-    const setFilterSelect = (id, allLabel, arr) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const prev = el.value || "ALL";
-        el.innerHTML = `<option value="ALL">${allLabel}</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join("");
-        el.value = (prev === "ALL" || arr.includes(prev)) ? prev : "ALL";
-    };
-    setFilterSelect("globalFilterYear", "Semua Tahun", dd.years);
-    setFilterSelect("globalFilterSession", "Semua Sesi", dd.sessions);
-    setFilterSelect("globalFilterUnit", "Semua Jabatan / Unit", dd.units);
-    setFilterSelect("globalStatusFilter", "Semua Status Tracking", dd.statuses);
+    setDl("dlYears", years);
+    setDl("dlSessions", sessions);
+    setDl("dlUnits", units);
+    setDl("dlStatuses", statuses);
 }
 
 function ensureCustomDropdownValueSaved(category, val) {
@@ -1172,152 +1435,37 @@ function ensureCustomDropdownValueSaved(category, val) {
     if (!state.dropdowns[category].includes(clean)) {
         state.dropdowns[category].push(clean);
     }
-}
-
-function populateFundSelectDropdowns() {
-    populateDynamicDropdowns();
-    const codes = getFundCodes();
-    const entrySelect = document.getElementById("entryFundCode");
-    if (entrySelect) {
-        const cur = entrySelect.value;
-        entrySelect.innerHTML = codes.map(c => `<option value="${c}">${state.funds[c].name} (${c})</option>`).join("");
-        if (codes.includes(cur)) entrySelect.value = cur;
-    }
-    const filterSelect = document.getElementById("globalFundFilter");
-    if (filterSelect) {
-        const curF = filterSelect.value || "ALL";
-        filterSelect.innerHTML = `<option value="ALL">Semua Tabung</option>` + codes.map(c => `<option value="${c}">${c}</option>`).join("");
-        if (curF === "ALL" || codes.includes(curF)) filterSelect.value = curF;
-    }
-}
-
-// ================= URUS SENARAI PILIHAN DROPDOWN (CRUD) =================
-function openDropdownCrudModal(defaultCat = "years") {
-    activeDropdownCategory = defaultCat;
-    switchDropdownCategory(defaultCat);
-    showModal("modalDropdownCrud");
-}
-
-function switchDropdownCategory(cat) {
-    activeDropdownCategory = cat;
-    ["years", "sessions", "units", "statuses"].forEach(k => {
-        const btn = document.getElementById("ddTab-" + k);
-        if (!btn) return;
-        if (k === cat) {
-            btn.className = "px-3 py-1.5 rounded-lg font-extrabold bg-indigo-600 text-white shadow-sm";
-        } else {
-            btn.className = "px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+    if (category === "units") {
+        if (!state.unitAccounts) state.unitAccounts = {};
+        if (!state.unitAccounts[clean]) {
+            state.unitAccounts[clean] = { name: clean, allocatedTerima: 0, refNote: "Agihan Peruntukan Unit" };
         }
-    });
-    document.getElementById("newDropdownValueInput").value = "";
-    renderDropdownOptionsCrudList();
+    }
 }
 
-function renderDropdownOptionsCrudList() {
-    const list = state.dropdowns[activeDropdownCategory] || [];
-    const container = document.getElementById("dropdownOptionsListContainer");
-    if (!container) return;
-
-    if (list.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada pilihan dalam senarai ini.</div>`;
-        return;
-    }
-
-    container.innerHTML = list.map((item, idx) => `
-        <div class="p-2.5 flex items-center justify-between gap-2 hover:bg-slate-50">
-            <input type="text" id="ddEditInput-${idx}" value="${item.replace(/"/g, '&quot;')}" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:border-teal-600 focus:outline-none" />
-            <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="updateDropdownOption(${idx})" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] flex items-center gap-1" title="Simpan perubahan teks">
-                    <i class="fa-solid fa-check"></i> Simpan
-                </button>
-                <button onclick="deleteDropdownOption(${idx})" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition" title="Padam pilihan ini">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </div>
-        </div>
-    `).join("");
-}
-
-function addNewDropdownOption() {
-    const input = document.getElementById("newDropdownValueInput");
-    const val = (input.value || "").trim();
-    if (!val) {
-        showToast("Sila taip nilai pilihan baharu.");
-        return;
-    }
-    const list = state.dropdowns[activeDropdownCategory];
-    if (list.includes(val)) {
-        showToast("Pilihan tersebut sudah wujud dalam senarai.");
-        return;
-    }
-    list.push(val);
-    input.value = "";
-    saveState();
-    populateDynamicDropdowns();
-    renderDropdownOptionsCrudList();
-    renderAllSheets();
-    showToast(`Pilihan "${val}" ditambah ke dalam dropdown.`);
-}
-
-function updateDropdownOption(index) {
-    const inputEl = document.getElementById(`ddEditInput-${index}`);
-    if (!inputEl) return;
-    const newVal = inputEl.value.trim();
-    const oldVal = state.dropdowns[activeDropdownCategory][index];
-    if (!newVal) {
-        showToast("Nilai pilihan tidak boleh kosong.");
-        return;
-    }
-    state.dropdowns[activeDropdownCategory][index] = newVal;
-
-    // Kemas kini rekod sedia ada yang menggunakan nilai lama
-    const fieldMap = { years: "year", sessions: "session", units: "unit", statuses: "status" };
-    const fieldName = fieldMap[activeDropdownCategory];
-    if (fieldName && oldVal !== newVal) {
-        state.entries.forEach(e => {
-            if (e[fieldName] === oldVal) e[fieldName] = newVal;
-        });
-    }
-
-    saveState();
-    populateDynamicDropdowns();
-    renderDropdownOptionsCrudList();
-    renderAllSheets();
-    showToast(`Pilihan dikemas kini kepada "${newVal}".`);
-}
-
-function deleteDropdownOption(index) {
-    const list = state.dropdowns[activeDropdownCategory];
-    const removed = list[index];
-    list.splice(index, 1);
-    saveState();
-    populateDynamicDropdowns();
-    renderDropdownOptionsCrudList();
-    renderAllSheets();
-    showToast(`Pilihan "${removed}" telah dipadam daripada senarai.`);
-}
-
-// Saringan Aktif (Tahun, Sesi, Unit)
 function getActiveFilters() {
     return {
-        year: document.getElementById("globalFilterYear").value,
-        session: document.getElementById("globalFilterSession").value,
-        unit: document.getElementById("globalFilterUnit").value
+        year: document.getElementById("globalFilterYear")?.value || "ALL",
+        session: document.getElementById("globalFilterSession")?.value || "ALL",
+        unit: document.getElementById("globalFilterUnit")?.value || "ALL"
     };
 }
 
-function getSheetSummary(fundCode) {
-    const fundObj = state.funds[fundCode];
-    const baseMasuk = Number(fundObj?.allocatedMasuk || 0);
+function filterEntriesByGlobal(entries) {
     const f = getActiveFilters();
-
-    const rows = state.entries.filter(e => {
-        if (e.fund !== fundCode) return false;
+    return entries.filter(e => {
         if (f.year !== "ALL" && e.year !== f.year) return false;
         if (f.session !== "ALL" && e.session !== f.session) return false;
         if (f.unit !== "ALL" && e.unit !== f.unit) return false;
         return true;
     });
+}
+
+function getSheetSummary(fundCode) {
+    const fundObj = state.funds[fundCode];
+    const baseMasuk = Number(fundObj?.allocatedMasuk || 0);
+    const allFundRows = state.entries.filter(e => e.fund === fundCode);
+    const rows = filterEntriesByGlobal(allFundRows);
 
     const extraMasuk = rows.reduce((s, r) => s + Number(r.masuk || 0), 0);
     const totalKeluar = rows.reduce((s, r) => s + Number(r.keluar || 0), 0);
@@ -1326,7 +1474,128 @@ function getSheetSummary(fundCode) {
     const activityRows = rows.filter(r => r.type === "KELUAR");
     const selesaiCount = activityRows.filter(r => r.status === "Selesai & Laporan Lengkap").length;
 
-    return { fundObj, baseMasuk, extraMasuk, totalMasuk, totalKeluar, bakiSemasa, rows, totalActivities: activityRows.length, selesaiCount };
+    return {
+        fundObj,
+        baseMasuk,
+        extraMasuk,
+        totalMasuk,
+        totalKeluar,
+        bakiSemasa,
+        rows,
+        activityCount: activityRows.length,
+        selesaiCount
+    };
+}
+
+function renderAllSheets() {
+    renderDropdownFiltersAndDatalists();
+    const codes = getFundCodes();
+    const isAdmin = currentUser.role === "ADMIN";
+
+    const filterSelect = document.getElementById("globalFundFilter");
+    if (filterSelect) {
+        const prev = filterSelect.value || "ALL";
+        filterSelect.innerHTML = `<option value="ALL">Semua Tabung (${codes.length})</option>` +
+            codes.map(c => `<option value="${c}">${state.funds[c].name}</option>`).join("");
+        filterSelect.value = codes.includes(prev) ? prev : "ALL";
+    }
+
+    const entryFundSelect = document.getElementById("entryFundCode");
+    if (entryFundSelect) {
+        entryFundSelect.innerHTML = codes.map(c => `<option value="${c}">${state.funds[c].name} (${c})</option>`).join("");
+    }
+
+    renderBottomTabs();
+
+    let topPillsHtml = "";
+    let cardsHtml = "";
+    let summaryRowsHtml = "";
+    let grandActivities = 0;
+    let grandSelesai = 0;
+
+    codes.forEach((code, index) => {
+        const s = getSheetSummary(code);
+        grandActivities += s.activityCount;
+        grandSelesai += s.selesaiCount;
+
+        topPillsHtml += `
+            <div onclick="switchSheetTab('${code}')" class="cursor-pointer px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-700 border border-slate-700 shrink-0 transition">
+                <span class="text-[10px] text-slate-400 font-bold block">${s.fundObj.code}</span>
+                <span class="font-extrabold text-emerald-400 text-xs">${formatRM(s.bakiSemasa)}</span>
+            </div>
+        `;
+
+        cardsHtml += `
+            <div class="bg-white rounded-xl p-4 border border-slate-300 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200">${s.fundObj.code}</span>
+                        <span class="text-[11px] font-bold text-indigo-700">${s.selesaiCount}/${s.activityCount} Selesai</span>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-slate-900 mt-1.5">${s.fundObj.name}</h3>
+                    <p class="text-[11px] text-slate-500 truncate">${s.fundObj.waranRef || "-"}</p>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-100 text-xs">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">Dana Masuk</span>
+                        <strong class="text-emerald-700 font-bold">${formatRM(s.totalMasuk)}</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">Belanja</span>
+                        <strong class="text-rose-600 font-bold">${formatRM(s.totalKeluar)}</strong>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 font-bold block">Baki Tabung</span>
+                        <strong class="text-teal-800 font-extrabold">${formatRM(s.bakiSemasa)}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const inputMasukCell = isAdmin
+            ? `<input type="number" step="0.01" value="${s.baseMasuk}" onchange="updateBasePeruntukan('${code}', this.value)" class="excel-input" />`
+            : `<span class="font-extrabold text-slate-900">${formatRM(s.baseMasuk)}</span>`;
+
+        summaryRowsHtml += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-3 text-center font-bold text-slate-600">${index + 1}</td>
+                <td class="py-3 px-4">
+                    <div class="font-extrabold text-slate-900">${s.fundObj.name}</div>
+                    <div class="text-[11px] text-slate-500">Kod Tab: <span class="font-mono font-semibold">${code}</span></div>
+                </td>
+                <td class="py-3 px-4 text-slate-700">${s.fundObj.waranRef || "-"}</td>
+                <td class="py-3 px-4 text-right">${inputMasukCell}</td>
+                <td class="py-3 px-4 text-right font-bold text-rose-600">${formatRM(s.totalKeluar)}</td>
+                <td class="py-3 px-4 text-right font-extrabold text-teal-800 bg-teal-50/40">${formatRM(s.bakiSemasa)}</td>
+                <td class="py-3 px-3 text-center">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">${s.selesaiCount}/${s.activityCount} Selesai</span>
+                </td>
+                <td class="py-3 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="switchSheetTab('${code}')" class="bg-slate-900 hover:bg-teal-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Buka</button>
+                        <button onclick="openSheetCrudModal('${code}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1.5 rounded-lg transition" title="Edit Tab Sheet">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteSheet('${code}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1.5 rounded-lg transition" title="Padam Tab Sheet">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("topSeparateFundsBar").innerHTML = topPillsHtml;
+    document.getElementById("separateFundCardsGrid").innerHTML = cardsHtml;
+    document.getElementById("totalActivitiesHeaderBadge").textContent = `${grandSelesai} / ${grandActivities} Aktiviti Selesai`;
+    document.getElementById("peruntukanMainTableBody").innerHTML = summaryRowsHtml;
+
+    renderMasterTrackingTable();
+    renderUnitLedgerSection();
+
+    if (codes.includes(activeSheet)) {
+        renderActiveLedgerSheet(activeSheet);
+    }
 }
 
 function renderBottomTabs() {
@@ -1337,6 +1606,9 @@ function renderBottomTabs() {
     let html = `
         <button onclick="switchSheetTab('PERUNTUKAN')" class="px-3.5 py-1.5 rounded-t-lg text-xs ${activeSheet === 'PERUNTUKAN' ? 'font-extrabold border border-slate-300 bg-white text-teal-700 shadow-sm' : 'font-bold text-slate-600 hover:bg-slate-100'} flex items-center gap-1.5 shrink-0">
             <i class="fa-solid fa-table-list text-teal-600"></i> PERUNTUKAN
+        </button>
+        <button onclick="switchSheetTab('UNIT_LEDGER')" class="px-3.5 py-1.5 rounded-t-lg text-xs ${activeSheet === 'UNIT_LEDGER' ? 'font-extrabold border border-slate-300 bg-white text-indigo-700 shadow-sm' : 'font-bold text-slate-600 hover:bg-slate-100'} flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-building-user text-indigo-600"></i> TERIMA & BELANJA JABATAN/UNIT
         </button>
     `;
     codes.forEach(code => {
@@ -1353,125 +1625,55 @@ function renderBottomTabs() {
     container.innerHTML = html;
 }
 
-function renderAllSheets() {
-    populateFundSelectDropdowns();
-    renderBottomTabs();
-
-    const codes = getFundCodes();
-    const isAdmin = currentUser.role === "ADMIN";
-    let grandActivities = 0, grandSelesai = 0;
-    let topPillsHtml = "", cardsHtml = "";
-
-    const summaryRowsHtml = codes.map((code, idx) => {
-        const s = getSheetSummary(code);
-        grandActivities += s.totalActivities;
-        grandSelesai += s.selesaiCount;
-
-        topPillsHtml += `
-            <div onclick="switchSheetTab('${code}')" class="cursor-pointer px-2.5 py-0.5 border-r last:border-r-0 border-slate-700 hover:bg-slate-800 rounded transition shrink-0">
-                <span class="text-slate-400 text-[10px] font-bold block">${code}</span>
-                <strong class="text-emerald-400 font-mono">${formatRM(s.bakiSemasa)}</strong>
-            </div>
-        `;
-
-        cardsHtml += `
-            <div class="bg-white p-4 rounded-xl border border-slate-300 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 font-extrabold text-[10px]">${code}</span>
-                        <span class="text-[11px] font-bold text-indigo-700">${s.selesaiCount}/${s.totalActivities} Selesai</span>
-                    </div>
-                    <h3 class="text-sm font-extrabold text-slate-900 mt-1.5">${s.fundObj.name}</h3>
-                </div>
-                <div class="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-slate-100 text-xs">
-                    <div><span class="text-[10px] text-slate-400 block">Masuk</span><strong class="text-emerald-700">${formatRM(s.totalMasuk)}</strong></div>
-                    <div><span class="text-[10px] text-slate-400 block">Keluar</span><strong class="text-rose-600">${formatRM(s.totalKeluar)}</strong></div>
-                    <div class="bg-amber-50 px-2 py-1 rounded border border-amber-200"><span class="text-[10px] text-amber-900 block font-bold">Baki</span><strong class="text-slate-950">${formatRM(s.bakiSemasa)}</strong></div>
-                </div>
-            </div>
-        `;
-
-        const masukInput = isAdmin ? `<input type="number" step="0.01" value="${s.baseMasuk}" onchange="updateFundBaseAllocation('${code}', this.value)" class="excel-input" />` : formatRM(s.totalMasuk);
-
-        return `
-            <tr class="hover:bg-slate-50">
-                <td class="py-3 px-3 text-center font-bold">${idx + 1}</td>
-                <td class="py-3 px-4">
-                    <div class="font-extrabold text-slate-900">${s.fundObj.name}</div>
-                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Kod: ${code}</span>
-                </td>
-                <td class="py-3 px-4 text-slate-600">${s.fundObj.waranRef}</td>
-                <td class="py-3 px-4 text-right">${masukInput}</td>
-                <td class="py-3 px-4 text-right font-bold text-rose-600">${formatRM(s.totalKeluar)}</td>
-                <td class="py-3 px-4 text-right font-extrabold text-teal-800 bg-teal-50/30">${formatRM(s.bakiSemasa)}</td>
-                <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">${s.selesaiCount}/${s.totalActivities}</span></td>
-                <td class="py-3 px-3 text-center">
-                    <div class="flex items-center justify-center gap-1">
-                        <button onclick="switchSheetTab('${code}')" class="bg-slate-800 hover:bg-teal-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg" title="Buka Buku Tunai">Buka</button>
-                        <button onclick="openSheetCrudModal('${code}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1.5 rounded-lg" title="Edit Tab Sheet">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button onclick="confirmDeleteSheet('${code}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1.5 rounded-lg transition" title="Padam Tab Sheet">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join("");
-
-    document.getElementById("topSeparateFundsBar").innerHTML = topPillsHtml;
-    document.getElementById("separateFundCardsGrid").innerHTML = cardsHtml;
-    document.getElementById("totalActivitiesHeaderBadge").textContent = `${grandSelesai} / ${grandActivities} Aktiviti Selesai`;
-    document.getElementById("peruntukanMainTableBody").innerHTML = summaryRowsHtml;
-
-    renderMasterTrackingTable();
-
-    if (codes.includes(activeSheet)) {
-        renderActiveLedgerSheet(activeSheet);
-    }
-}
-
 function renderMasterTrackingTable() {
-    const q = (document.getElementById("globalSearchInput")?.value || "").toLowerCase();
-    const statusFilter = document.getElementById("globalStatusFilter")?.value || "ALL";
     const fundFilter = document.getElementById("globalFundFilter")?.value || "ALL";
-    const f = getActiveFilters();
+    const search = (document.getElementById("globalSearchInput")?.value || "").toLowerCase();
+    const statusFilter = document.getElementById("globalStatusFilter")?.value || "ALL";
 
-    const filtered = state.entries.filter(e => {
-        if (e.type !== "KELUAR") return false;
-        if (fundFilter !== "ALL" && e.fund !== fundFilter) return false;
-        if (statusFilter !== "ALL" && e.status !== statusFilter) return false;
-        if (f.year !== "ALL" && e.year !== f.year) return false;
-        if (f.session !== "ALL" && e.session !== f.session) return false;
-        if (f.unit !== "ALL" && e.unit !== f.unit) return false;
-        if (q && !(`${e.title} ${e.fileNo} ${e.unit}`.toLowerCase().includes(q))) return false;
-        return true;
-    });
+    let list = filterEntriesByGlobal(state.entries).filter(e => e.type === "KELUAR");
+    if (fundFilter !== "ALL") list = list.filter(e => e.fund === fundFilter);
+    if (statusFilter !== "ALL") list = list.filter(e => e.status === statusFilter);
+    if (search) {
+        list = list.filter(e =>
+            e.title.toLowerCase().includes(search) ||
+            e.fileNo.toLowerCase().includes(search) ||
+            e.unit.toLowerCase().includes(search)
+        );
+    }
 
     const tbody = document.getElementById("masterTrackingTableBody");
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tiada rekod aktiviti mengikut saringan terpilih.</td></tr>`;
+    if (!tbody) return;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">Tiada rekod aktiviti ditemui mengikut saringan semasa.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = filtered.map(e => `
+    tbody.innerHTML = list.map(item => `
         <tr class="hover:bg-slate-50">
-            <td class="py-2.5 px-3 font-extrabold text-xs text-teal-800">${e.fund}</td>
-            <td class="py-2.5 px-3 font-semibold">${e.year} <br><span class="text-[10px] text-slate-500">${e.session}</span></td>
-            <td class="py-2.5 px-3 text-slate-600">${e.date}</td>
-            <td class="py-2.5 px-3 font-bold text-slate-900">${e.title}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-600">${e.fileNo}</td>
-            <td class="py-2.5 px-3 text-slate-700">${e.unit}</td>
-            <td class="py-2.5 px-3 text-right font-bold text-rose-600">${formatRM(e.keluar)}</td>
-            <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100">${e.status}</span></td>
+            <td class="py-2.5 px-3 font-extrabold text-xs text-teal-800">${item.fund}</td>
+            <td class="py-2.5 px-3 text-xs font-semibold">${item.year} · <span class="text-indigo-700">${item.session}</span></td>
+            <td class="py-2.5 px-3 font-mono text-xs">${item.date}</td>
+            <td class="py-2.5 px-3">
+                <div class="font-bold text-slate-900">${item.title}</div>
+                ${renderEntryDocsPills(item)}
+            </td>
+            <td class="py-2.5 px-3 font-mono text-xs">${item.fileNo}</td>
+            <td class="py-2.5 px-3">${item.unit}</td>
+            <td class="py-2.5 px-3 text-right font-bold text-rose-600">${formatRM(item.keluar)}</td>
+            <td class="py-2.5 px-3 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">${item.status}</span>
+            </td>
             <td class="py-2.5 px-3 text-center">
                 <div class="flex items-center justify-center gap-1">
-                    <button onclick="openTrackingDrawer('${e.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold px-2 py-1 rounded" title="Tracking Aktiviti">Tracking</button>
-                    <button onclick="openEditEntryModal('${e.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded" title="Edit Perkara">
+                    <button onclick="openTrackingDrawer('${item.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Tracking</button>
+                    <button onclick="openTrackingDrawer('${item.id}', true)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1" title="Muat Naik Kertas Kerja & Laporan ke Google Drive">
+                        <i class="fa-brands fa-google-drive"></i> ${(item.documents || []).length}
+                    </button>
+                    <button onclick="openEditEntryModal('${item.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded-lg" title="Edit Perkara">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button onclick="confirmDeleteEntry('${e.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1 rounded transition" title="Padam Perkara">
+                    <button onclick="confirmDeleteEntry('${item.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1 rounded-lg transition" title="Padam Perkara">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -1482,35 +1684,28 @@ function renderMasterTrackingTable() {
 
 function renderActiveLedgerSheet(fundCode) {
     const s = getSheetSummary(fundCode);
-    if (!s.fundObj) return;
-    const isAdmin = currentUser.role === "ADMIN";
-
-    document.getElementById("ledgerBadgeCode").textContent = fundCode;
-    document.getElementById("ledgerSheetTitle").textContent = `BUKU TUNAI: ${s.fundObj.name}`;
+    document.getElementById("ledgerBadgeCode").textContent = s.fundObj.code;
+    document.getElementById("ledgerSheetTitle").textContent = "BUKU TUNAI: " + s.fundObj.name;
     document.getElementById("sheetTotalMasuk").textContent = formatRM(s.totalMasuk);
     document.getElementById("sheetTotalKeluar").textContent = formatRM(s.totalKeluar);
     document.getElementById("sheetTotalBaki").textContent = formatRM(s.bakiSemasa);
     document.getElementById("sheetTotalCount").textContent = `${s.rows.length} Rekod`;
 
     let runningBaki = s.baseMasuk;
-    const baseMasukCell = isAdmin
-        ? `<input type="number" step="0.01" value="${s.baseMasuk}" onchange="updateFundBaseAllocation('${fundCode}', this.value)" class="excel-input" title="Taip untuk ubah Dana Masuk Induk" />`
-        : formatRM(s.baseMasuk);
-
-    let rowsHtml = `
+    let html = `
         <tr class="bg-amber-50/70">
             <td class="py-2.5 px-2.5 text-center font-bold">1</td>
             <td class="py-2.5 px-3 font-mono">01/01/2026</td>
             <td class="py-2.5 px-3">2026 / Semua</td>
             <td class="py-2.5 px-3 font-extrabold text-slate-900">PERUNTUKAN DITERIMA (DANA MASUK INDUK)</td>
-            <td class="py-2.5 px-3 font-mono">${s.fundObj.waranRef}</td>
+            <td class="py-2.5 px-3 font-mono">${s.fundObj.waranRef || "-"}</td>
             <td class="py-2.5 px-3">JHEP (Induk)</td>
-            <td class="py-2.5 px-3 text-right font-extrabold text-emerald-700">${baseMasukCell}</td>
+            <td class="py-2.5 px-3 text-right font-extrabold text-emerald-700">${formatRM(s.baseMasuk)}</td>
             <td class="py-2.5 px-3 text-right">-</td>
             <td class="py-2.5 px-3 text-right font-extrabold bg-slate-100">${formatRM(runningBaki)}</td>
             <td class="py-2.5 px-3">Aktif</td>
             <td class="py-2.5 px-3 text-center">
-                <button onclick="openSheetCrudModal('${fundCode}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded" title="Edit Dana Masuk Induk / Waran">
+                <button onclick="openSheetCrudModal('${fundCode}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] px-2 py-1 rounded font-bold" title="Ubah Dana Masuk Induk">
                     <i class="fa-solid fa-pen"></i> Edit Induk
                 </button>
             </td>
@@ -1518,23 +1713,30 @@ function renderActiveLedgerSheet(fundCode) {
     `;
 
     s.rows.forEach((r, idx) => {
-        const m = Number(r.masuk || 0), k = Number(r.keluar || 0);
+        const m = Number(r.masuk || 0);
+        const k = Number(r.keluar || 0);
         runningBaki = runningBaki + m - k;
-        rowsHtml += `
+        html += `
             <tr class="hover:bg-slate-50">
                 <td class="py-2.5 px-2.5 text-center">${idx + 2}</td>
                 <td class="py-2.5 px-3 font-mono">${r.date}</td>
-                <td class="py-2.5 px-3 font-semibold">${r.year} <br><span class="text-[10px] text-slate-500">${r.session}</span></td>
-                <td class="py-2.5 px-3 font-bold text-slate-900">${r.title}</td>
+                <td class="py-2.5 px-3 font-semibold">${r.year}<br><span class="text-[10px] text-slate-500">${r.session}</span></td>
+                <td class="py-2.5 px-3">
+                    <div class="font-bold text-slate-900">${r.title}</div>
+                    ${renderEntryDocsPills(r)}
+                </td>
                 <td class="py-2.5 px-3 font-mono">${r.fileNo}</td>
                 <td class="py-2.5 px-3">${r.unit}</td>
-                <td class="py-2.5 px-3 text-right text-emerald-700 font-bold">${m > 0 ? formatRM(m) : '-'}</td>
-                <td class="py-2.5 px-3 text-right text-rose-600 font-bold">${k > 0 ? formatRM(k) : '-'}</td>
+                <td class="py-2.5 px-3 text-right font-bold text-emerald-700">${m > 0 ? formatRM(m) : "-"}</td>
+                <td class="py-2.5 px-3 text-right font-bold text-rose-600">${k > 0 ? formatRM(k) : "-"}</td>
                 <td class="py-2.5 px-3 text-right font-extrabold bg-slate-50">${formatRM(runningBaki)}</td>
                 <td class="py-2.5 px-3">${r.status}</td>
                 <td class="py-2.5 px-3 text-center">
                     <div class="flex items-center justify-center gap-1">
-                        <button onclick="openTrackingDrawer('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] px-2 py-1 rounded font-bold" title="Tracking">Tracking</button>
+                        <button onclick="openTrackingDrawer('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] px-2 py-1 rounded font-bold">Tracking</button>
+                        <button onclick="openTrackingDrawer('${r.id}', true)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] px-2 py-1 rounded font-bold flex items-center gap-1" title="Muat Naik Kertas Kerja & Laporan ke Google Drive">
+                            <i class="fa-brands fa-google-drive"></i> ${(r.documents || []).length}
+                        </button>
                         <button onclick="openEditEntryModal('${r.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] px-2 py-1 rounded font-bold" title="Edit Perkara">
                             <i class="fa-solid fa-pen"></i>
                         </button>
@@ -1547,7 +1749,7 @@ function renderActiveLedgerSheet(fundCode) {
         `;
     });
 
-    document.getElementById("ledgerTableBody").innerHTML = rowsHtml;
+    document.getElementById("ledgerTableBody").innerHTML = html;
     document.getElementById("ledgerTableFoot").innerHTML = `
         <tr>
             <td colspan="6" class="py-3 px-4 text-right uppercase">JUMLAH KESELURUHAN (MENGIKUT SARINGAN)</td>
@@ -1562,135 +1764,443 @@ function renderActiveLedgerSheet(fundCode) {
 function switchSheetTab(sheetName) {
     activeSheet = sheetName;
     document.getElementById("sheet-PERUNTUKAN").classList.toggle("hidden", sheetName !== "PERUNTUKAN");
-    document.getElementById("sheet-LEDGER").classList.toggle("hidden", sheetName === "PERUNTUKAN");
+    document.getElementById("sheet-UNIT_LEDGER").classList.toggle("hidden", sheetName !== "UNIT_LEDGER");
+    document.getElementById("sheet-LEDGER").classList.toggle("hidden", sheetName === "PERUNTUKAN" || sheetName === "UNIT_LEDGER");
     renderAllSheets();
 }
 
-// ================= EKSPORT LAPORAN (PDF, WORD, EXCEL) =================
-function openExportReportModal() {
-    const f = getActiveFilters();
-    document.getElementById("exportReportInfoSummary").innerHTML = `Tahun: <strong>${f.year}</strong> | Sesi: <strong>${f.session}</strong> | Jabatan/Unit: <strong>${f.unit}</strong>`;
-    showModal("modalExportReport");
+// ================= FUNGSI TAB TERIMA & BELANJA JABATAN / UNIT (CRUD LENGKAP) =================
+function getAllUnitNames() {
+    if (!state.unitAccounts) state.unitAccounts = {};
+    (state.dropdowns.units || []).forEach(u => {
+        if (!state.unitAccounts[u]) {
+            state.unitAccounts[u] = { name: u, allocatedTerima: 0, refNote: "Agihan Peruntukan Unit" };
+        }
+    });
+    return Object.keys(state.unitAccounts);
 }
 
-function executeExportReport() {
-    const format = document.getElementById("exportFormatSelect").value;
-    closeModal("modalExportReport");
+function getUnitSummary(unitName) {
+    const acc = state.unitAccounts[unitName] || { name: unitName, allocatedTerima: 0, refNote: "-" };
+    const baseTerima = Number(acc.allocatedTerima || 0);
+    const f = getActiveFilters();
 
-    if (format === "PDF") {
-        printActiveSheetPDF();
-    } else if (format === "WORD") {
-        downloadWordReport();
-    } else if (format === "EXCEL") {
-        downloadExcelCSV();
+    const rows = state.entries.filter(e => {
+        if (e.unit !== unitName) return false;
+        if (f.year !== "ALL" && e.year !== f.year) return false;
+        if (f.session !== "ALL" && e.session !== f.session) return false;
+        return true;
+    });
+
+    const extraTerima = rows.reduce((s, r) => s + Number(r.masuk || 0), 0);
+    const totalBelanja = rows.reduce((s, r) => s + Number(r.keluar || 0), 0);
+    const totalTerima = baseTerima + extraTerima;
+    const bakiSemasa = totalTerima - totalBelanja;
+
+    return {
+        acc,
+        baseTerima,
+        extraTerima,
+        totalTerima,
+        totalBelanja,
+        bakiSemasa,
+        rows,
+        activityCount: rows.length
+    };
+}
+
+function renderUnitLedgerSection() {
+    const unitNames = getAllUnitNames();
+    const isAdmin = currentUser.role === "ADMIN";
+
+    const unitFilterSelect = document.getElementById("unitLedgerSelectFilter");
+    if (unitFilterSelect) {
+        unitFilterSelect.innerHTML = `<option value="ALL">Semua Jabatan / Unit (${unitNames.length})</option>` +
+            unitNames.map(u => `<option value="${u}">${u}</option>`).join("");
+        if (focusedUnitFilter !== "ALL" && !unitNames.includes(focusedUnitFilter)) {
+            focusedUnitFilter = "ALL";
+        }
+        unitFilterSelect.value = focusedUnitFilter;
+    }
+
+    const badgeEl = document.getElementById("selectedUnitFilterBadge");
+    if (badgeEl) {
+        badgeEl.textContent = focusedUnitFilter === "ALL" ? "Semua Jabatan / Unit" : focusedUnitFilter;
+    }
+
+    let grandTerima = 0, grandBelanja = 0, grandBaki = 0;
+
+    const summaryHtml = unitNames.map((uName, idx) => {
+        const s = getUnitSummary(uName);
+        grandTerima += s.totalTerima;
+        grandBelanja += s.totalBelanja;
+        grandBaki += s.bakiSemasa;
+
+        const baseInput = isAdmin
+            ? `<input type="number" step="0.01" value="${s.baseTerima}" onchange="updateUnitBaseTerima('${uName.replace(/'/g, "\\'")}', this.value)" class="excel-input" title="Taip terus Peruntukan Terima Awal Unit" />`
+            : formatRM(s.baseTerima);
+
+        return `
+            <tr class="hover:bg-slate-50 ${focusedUnitFilter === uName ? 'bg-indigo-50/70' : ''}">
+                <td class="py-2.5 px-3 text-center font-bold">${idx + 1}</td>
+                <td class="py-2.5 px-4">
+                    <button onclick="setFocusedUnitFilter('${uName.replace(/'/g, "\\'")}')" class="text-left font-extrabold text-slate-900 hover:text-indigo-700 hover:underline">
+                        ${uName}
+                    </button>
+                </td>
+                <td class="py-2.5 px-4 text-slate-600">${s.acc.refNote || '-'}</td>
+                <td class="py-2.5 px-4 text-right">${baseInput}</td>
+                <td class="py-2.5 px-4 text-right font-semibold text-emerald-700">${formatRM(s.extraTerima)}</td>
+                <td class="py-2.5 px-4 text-right font-extrabold text-emerald-800 bg-emerald-50/40">${formatRM(s.totalTerima)}</td>
+                <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatRM(s.totalBelanja)}</td>
+                <td class="py-2.5 px-4 text-right font-extrabold ${s.bakiSemasa < 0 ? 'text-rose-700 bg-rose-50' : 'text-teal-900 bg-amber-50/50'}">${formatRM(s.bakiSemasa)}</td>
+                <td class="py-2.5 px-3 text-center">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">${s.activityCount} Rekod</span>
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="setFocusedUnitFilter('${uName.replace(/'/g, "\\'")}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold px-2 py-1 rounded" title="Papar Buku Tunai Unit Ini">Lihat</button>
+                        <button onclick="openNewUnitTransactionModal('MASUK', '${uName.replace(/'/g, "\\'")}')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] font-bold px-2 py-1 rounded" title="Tambah Terima Unit">+Terima</button>
+                        <button onclick="openNewUnitTransactionModal('KELUAR', '${uName.replace(/'/g, "\\'")}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-[11px] font-bold px-2 py-1 rounded" title="Tambah Belanja Unit">+Belanja</button>
+                        <button onclick="openUnitAccountCrudModal('${uName.replace(/'/g, "\\'")}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded" title="Edit Jabatan / Unit">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteUnitAccount('${uName.replace(/'/g, "\\'")}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] font-bold px-2 py-1 rounded transition" title="Padam Jabatan / Unit">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    const summaryBody = document.getElementById("unitSummaryTableBody");
+    if (summaryBody) summaryBody.innerHTML = summaryHtml;
+
+    document.getElementById("unitGrandTerima").textContent = formatRM(grandTerima);
+    document.getElementById("unitGrandBelanja").textContent = formatRM(grandBelanja);
+    document.getElementById("unitGrandBaki").textContent = formatRM(grandBaki);
+    document.getElementById("unitGrandCount").textContent = `${unitNames.length} Unit`;
+
+    renderUnitDetailedTransactionsTable();
+}
+
+function renderUnitDetailedTransactionsTable() {
+    const f = getActiveFilters();
+    const typeFilter = document.getElementById("unitLedgerTypeFilter")?.value || "ALL";
+    const unitNames = getAllUnitNames();
+
+    let runningBaki = 0;
+    let totalMasuk = 0;
+    let totalKeluar = 0;
+    let rowsHtml = "";
+    let rowCounter = 1;
+
+    const targetUnits = focusedUnitFilter === "ALL" ? unitNames : [focusedUnitFilter];
+    targetUnits.forEach(uName => {
+        const acc = state.unitAccounts[uName];
+        const initTerima = Number(acc?.allocatedTerima || 0);
+        if (initTerima > 0 && (typeFilter === "ALL" || typeFilter === "MASUK")) {
+            runningBaki += initTerima;
+            totalMasuk += initTerima;
+            rowsHtml += `
+                <tr class="bg-amber-50/60">
+                    <td class="py-2 px-2.5 text-center font-bold">${rowCounter++}</td>
+                    <td class="py-2 px-3 font-mono">01/01/2026</td>
+                    <td class="py-2 px-3">Semua Sesi</td>
+                    <td class="py-2 px-3 font-extrabold text-indigo-900">${uName}</td>
+                    <td class="py-2 px-3"><span class="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold text-[10px]">AGIHAN UNIT</span></td>
+                    <td class="py-2 px-3 font-extrabold text-slate-900">TERIMA AWAL UNIT: ${acc.refNote || 'Peruntukan Tahunan Unit'}</td>
+                    <td class="py-2 px-3 font-mono">-</td>
+                    <td class="py-2 px-3 text-right font-extrabold text-emerald-700">${formatRM(initTerima)}</td>
+                    <td class="py-2 px-3 text-right">-</td>
+                    <td class="py-2 px-3 text-right font-extrabold bg-slate-100">${formatRM(runningBaki)}</td>
+                    <td class="py-2 px-3">Aktif</td>
+                    <td class="py-2 px-3 text-center">
+                        <button onclick="openUnitAccountCrudModal('${uName.replace(/'/g, "\\'")}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-2 py-1 rounded">
+                            <i class="fa-solid fa-pen"></i> Edit Awal
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    });
+
+    const filteredEntries = state.entries.filter(e => {
+        if (focusedUnitFilter !== "ALL" && e.unit !== focusedUnitFilter) return false;
+        if (f.year !== "ALL" && e.year !== f.year) return false;
+        if (f.session !== "ALL" && e.session !== f.session) return false;
+        if (f.unit !== "ALL" && e.unit !== f.unit) return false;
+        if (typeFilter !== "ALL" && e.type !== typeFilter) return false;
+        return true;
+    });
+
+    filteredEntries.forEach(r => {
+        const m = Number(r.masuk || 0);
+        const k = Number(r.keluar || 0);
+        runningBaki = runningBaki + m - k;
+        totalMasuk += m;
+        totalKeluar += k;
+
+        rowsHtml += `
+            <tr class="hover:bg-slate-50">
+                <td class="py-2.5 px-2.5 text-center">${rowCounter++}</td>
+                <td class="py-2.5 px-3 font-mono">${r.date}</td>
+                <td class="py-2.5 px-3 font-semibold">${r.year} <br><span class="text-[10px] text-slate-500">${r.session}</span></td>
+                <td class="py-2.5 px-3 font-bold text-indigo-950">${r.unit}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-teal-50 text-teal-800 font-extrabold text-[10px]">${r.fund}</span></td>
+                <td class="py-2.5 px-3">
+                    <div class="font-bold text-slate-900">${r.title}</div>
+                    ${renderEntryDocsPills(r)}
+                </td>
+                <td class="py-2.5 px-3 font-mono">${r.fileNo}</td>
+                <td class="py-2.5 px-3 text-right font-bold text-emerald-700">${m > 0 ? formatRM(m) : '-'}</td>
+                <td class="py-2.5 px-3 text-right font-bold text-rose-600">${k > 0 ? formatRM(k) : '-'}</td>
+                <td class="py-2.5 px-3 text-right font-extrabold bg-slate-50">${formatRM(runningBaki)}</td>
+                <td class="py-2.5 px-3">${r.status}</td>
+                <td class="py-2.5 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="openTrackingDrawer('${r.id}')" class="bg-teal-600 hover:bg-teal-700 text-white text-[11px] px-2 py-1 rounded font-bold">Tracking</button>
+                        <button onclick="openTrackingDrawer('${r.id}', true)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] px-2 py-1 rounded font-bold flex items-center gap-1" title="Muat Naik Kertas Kerja & Laporan ke Google Drive">
+                            <i class="fa-brands fa-google-drive"></i> ${(r.documents || []).length}
+                        </button>
+                        <button onclick="openEditEntryModal('${r.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] px-2 py-1 rounded font-bold" title="Edit Transaksi Unit">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteEntry('${r.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white text-[11px] px-2 py-1 rounded font-bold transition" title="Padam Transaksi Unit">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    if (!rowsHtml) {
+        rowsHtml = `<tr><td colspan="12" class="py-6 text-center text-slate-400">Tiada rekod terima atau belanja bagi Jabatan/Unit ini.</td></tr>`;
+    }
+
+    const bodyEl = document.getElementById("unitDetailedLedgerBody");
+    if (bodyEl) bodyEl.innerHTML = rowsHtml;
+
+    const footEl = document.getElementById("unitDetailedLedgerFoot");
+    if (footEl) {
+        footEl.innerHTML = `
+            <tr>
+                <td colspan="7" class="py-3 px-4 text-right uppercase">JUMLAH TERIMA & BELANJA JABATAN / UNIT TERPILIH</td>
+                <td class="py-3 px-3 text-right text-emerald-700">${formatRM(totalMasuk)}</td>
+                <td class="py-3 px-3 text-right text-rose-600">${formatRM(totalKeluar)}</td>
+                <td class="py-3 px-3 text-right text-teal-900 bg-amber-100">${formatRM(totalMasuk - totalKeluar)}</td>
+                <td colspan="2"></td>
+            </tr>
+        `;
     }
 }
 
-function printActiveSheetPDF() {
-    const codes = getFundCodes();
-    const f = getActiveFilters();
-    let html = `<div style="padding:28px;font-family:sans-serif;color:#111;">
-        <h2>JABATAN HAL EHWAL PELAJAR (JHEP) — LAPORAN KEWANGAN & AKTIVITI</h2>
-        <p style="font-size:12px;">Saringan: Tahun [${f.year}] | Sesi [${f.session}] | Unit [${f.unit}]</p><hr>`;
+function setFocusedUnitFilter(unitName) {
+    focusedUnitFilter = unitName;
+    renderUnitLedgerSection();
+}
 
-    codes.forEach(c => {
-        const s = getSheetSummary(c);
-        html += `<h3>Tabung: ${s.fundObj.name}</h3>
-        <p style="font-size:11px;">Masuk: ${formatRM(s.totalMasuk)} | Keluar: ${formatRM(s.totalKeluar)} | Baki: ${formatRM(s.bakiSemasa)}</p>
-        <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:15px;">
-            <tr style="background:#eee;"><th style="border:1px solid #333;padding:4px;">Tarikh</th><th style="border:1px solid #333;padding:4px;">Sesi</th><th style="border:1px solid #333;padding:4px;">Perkara</th><th style="border:1px solid #333;padding:4px;">Unit</th><th style="border:1px solid #333;padding:4px;">Keluar (RM)</th></tr>`;
-        s.rows.forEach(r => {
-            html += `<tr><td style="border:1px solid #333;padding:4px;">${r.date}</td><td style="border:1px solid #333;padding:4px;">${r.session}</td><td style="border:1px solid #333;padding:4px;">${r.title}</td><td style="border:1px solid #333;padding:4px;">${r.unit}</td><td style="border:1px solid #333;padding:4px;text-align:right;">${formatRM(r.keluar)}</td></tr>`;
+function updateUnitBaseTerima(unitName, val) {
+    if (!state.unitAccounts[unitName]) {
+        state.unitAccounts[unitName] = { name: unitName, allocatedTerima: 0, refNote: "Agihan Peruntukan Unit" };
+    }
+    state.unitAccounts[unitName].allocatedTerima = Math.max(0, Number(val || 0));
+    saveState();
+    renderAllSheets();
+    showToast(`Terima Awal bagi "${unitName}" telah dikemas kini.`);
+}
+
+function openNewUnitTransactionModal(type = "KELUAR", preselectUnit = null) {
+    openNewActivityModal(type);
+    const chosenUnit = preselectUnit || (focusedUnitFilter !== "ALL" ? focusedUnitFilter : (state.dropdowns.units[0] || "JHEP (Induk)"));
+    document.getElementById("entryUnit").value = chosenUnit;
+    document.getElementById("modalEntryHeading").textContent = type === "MASUK"
+        ? `Rekod Terima Peruntukan (Jabatan / Unit)`
+        : `Rekod Belanja Aktiviti (Jabatan / Unit)`;
+}
+
+function resetUnitAccountCrudForm() {
+    document.getElementById("unitAccountFormBadge").textContent = "+ Tambah / Kemas Kini Jabatan atau Unit";
+    document.getElementById("unitOriginalName").value = "";
+    document.getElementById("unitNameCrudInput").value = "";
+    document.getElementById("unitInitialTerimaInput").value = "";
+    document.getElementById("unitRefNoteInput").value = "";
+}
+
+function openUnitAccountCrudModal(editUnitName = null) {
+    resetUnitAccountCrudForm();
+    renderExistingUnitsCrudList();
+    if (editUnitName && state.unitAccounts[editUnitName]) {
+        populateUnitAccountFormForEdit(editUnitName);
+    }
+    showModal("modalUnitAccountCrud");
+}
+
+function populateUnitAccountFormForEdit(unitName) {
+    const acc = state.unitAccounts[unitName];
+    if (!acc) return;
+    document.getElementById("unitAccountFormBadge").textContent = `Kemaskini Unit: ${unitName}`;
+    document.getElementById("unitOriginalName").value = unitName;
+    document.getElementById("unitNameCrudInput").value = acc.name;
+    document.getElementById("unitInitialTerimaInput").value = acc.allocatedTerima || 0;
+    document.getElementById("unitRefNoteInput").value = acc.refNote || "";
+}
+
+function renderExistingUnitsCrudList() {
+    const listEl = document.getElementById("existingUnitsCrudList");
+    if (!listEl) return;
+    const unitNames = getAllUnitNames();
+    if (unitNames.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada Jabatan / Unit. Sila tambah di atas.</div>`;
+        return;
+    }
+    listEl.innerHTML = unitNames.map(uName => {
+        const s = getUnitSummary(uName);
+        return `
+            <div class="p-3 hover:bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <div class="font-extrabold text-slate-900">${uName}</div>
+                    <div class="text-[11px] text-slate-500">
+                        Catatan: ${s.acc.refNote || '-'} · Terima Awal: <strong class="text-emerald-700">${formatRM(s.baseTerima)}</strong> · Belanja: <strong class="text-rose-600">${formatRM(s.totalBelanja)}</strong>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="populateUnitAccountFormForEdit('${uName.replace(/'/g, "\\'")}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button onclick="confirmDeleteUnitAccount('${uName.replace(/'/g, "\\'")}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1 transition">
+                        <i class="fa-solid fa-trash-can"></i> Padam Unit
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function saveUnitAccountCrudForm() {
+    const origName = document.getElementById("unitOriginalName").value.trim();
+    const newName = document.getElementById("unitNameCrudInput").value.trim();
+    const initialTerima = Number(document.getElementById("unitInitialTerimaInput").value || 0);
+    const refNote = document.getElementById("unitRefNoteInput").value.trim() || "Agihan Peruntukan Unit";
+
+    if (!newName) {
+        showToast("Sila isi Nama Jabatan / Unit Pelaksana.");
+        return;
+    }
+
+    if (origName && origName !== newName) {
+        delete state.unitAccounts[origName];
+        const idx = state.dropdowns.units.indexOf(origName);
+        if (idx !== -1) state.dropdowns.units[idx] = newName;
+        state.entries.forEach(e => {
+            if (e.unit === origName) e.unit = newName;
         });
-        html += `</table>`;
-    });
-    html += `</div>`;
-
-    const printArea = document.getElementById("printArea");
-    printArea.innerHTML = html;
-    printArea.classList.remove("hidden");
-    window.print();
-    printArea.classList.add("hidden");
-}
-
-function downloadWordReport() {
-    const f = getActiveFilters();
-    let content = `<html><head><meta charset="utf-8"><title>Laporan JHEP</title></head><body style="font-family:Arial;">`;
-    content += `<h2>Laporan Rasmi Kewangan & Aktiviti JHEP</h2><p>Tahun: ${f.year} | Sesi: ${f.session} | Unit: ${f.unit}</p>`;
-    
-    getFundCodes().forEach(c => {
-        const s = getSheetSummary(c);
-        content += `<h3>${s.fundObj.name}</h3><p>Baki Semasa: ${formatRM(s.bakiSemasa)}</p>`;
-    });
-    content += `</body></html>`;
-
-    const blob = new Blob(['\ufeff' + content], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Laporan_JHEP_${f.year}_${f.session}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast("Dokumen Word berjaya dimuat turun.");
-}
-
-function downloadExcelCSV() {
-    let csv = "Tabung,Tahun,Sesi,Tarikh,Perkara,No Fail,Unit,Keluar (RM),Status\n";
-    state.entries.forEach(e => {
-        csv += `"${e.fund}","${e.year}","${e.session}","${e.date}","${e.title}","${e.fileNo}","${e.unit}",${e.keluar},"${e.status}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `IDANA_JHEP_BukuTunai.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast("Fail Excel / CSV berjaya dimuat turun.");
-}
-
-// ================= ADD / EDIT / DELETE ENTRY (PERKARA) =================
-function openNewActivityModal(defaultType = "KELUAR") {
-    populateFundSelectDropdowns();
-    document.getElementById("modalEntryHeading").textContent = "Tambah Rekod Buku Tunai Baharu";
-    document.getElementById("editingEntryId").value = "";
-    if (activeSheet !== "PERUNTUKAN" && state.funds[activeSheet]) {
-        document.getElementById("entryFundCode").value = activeSheet;
+        if (focusedUnitFilter === origName) focusedUnitFilter = newName;
     }
-    document.getElementById("entryType").value = defaultType;
+
+    if (!state.dropdowns.units.includes(newName)) {
+        state.dropdowns.units.push(newName);
+    }
+
+    state.unitAccounts[newName] = {
+        name: newName,
+        allocatedTerima: Math.max(0, initialTerima),
+        refNote
+    };
+
+    saveState();
+    resetUnitAccountCrudForm();
+    renderExistingUnitsCrudList();
+    renderAllSheets();
+    showToast(`Jabatan / Unit "${newName}" berjaya disimpan.`);
+}
+
+function confirmDeleteUnitAccount(unitName) {
+    const unitNames = getAllUnitNames();
+    if (unitNames.length <= 1) {
+        showToast("Sekurang-kurangnya satu Jabatan / Unit perlu dikekalkan.");
+        return;
+    }
+    const relatedCount = state.entries.filter(e => e.unit === unitName).length;
+    document.getElementById("confirmDeleteTitle").textContent = `Padam Jabatan / Unit "${unitName}"?`;
+    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam <strong>${unitName}</strong> bersama <strong>${relatedCount} rekod terima/belanja</strong> unit ini?`;
+    
+    const btn = document.getElementById("confirmDeleteBtn");
+    btn.onclick = async function() {
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memadam...`;
+        btn.disabled = true;
+        
+        delete state.unitAccounts[unitName];
+        state.dropdowns.units = state.dropdowns.units.filter(u => u !== unitName);
+        state.entries = state.entries.filter(e => e.unit !== unitName);
+        if (focusedUnitFilter === unitName) focusedUnitFilter = "ALL";
+        
+        saveState(true);
+        await syncToGoogleSheet(false);
+        
+        closeModal("modalConfirmDelete");
+        renderExistingUnitsCrudList();
+        renderAllSheets();
+        showToast(`Jabatan / Unit "${unitName}" telah dipadam.`);
+        
+        btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i> Ya, Padam Sekarang`;
+        btn.disabled = false;
+    };
+    showModal("modalConfirmDelete");
+}
+
+function updateBasePeruntukan(fundCode, newValue) {
+    const num = Number(newValue);
+    if (isNaN(num) || num < 0) return;
+    state.funds[fundCode].allocatedMasuk = num;
+    saveState();
+    renderAllSheets();
+    showToast(`Dana Masuk ${fundCode} dikemas kini.`);
+}
+
+function openNewActivityModal(forceType) {
+    renderDropdownFiltersAndDatalists();
+    document.getElementById("editingEntryId").value = "";
+    document.getElementById("modalEntryHeading").textContent = "Tambah Rekod Buku Tunai Baharu";
+    const codes = getFundCodes();
+    document.getElementById("entryFundCode").value = codes.includes(activeSheet) ? activeSheet : codes[0];
+    document.getElementById("entryType").value = forceType || "KELUAR";
     document.getElementById("entryYear").value = state.dropdowns.years[0] || "2026";
     document.getElementById("entrySession").value = state.dropdowns.sessions[0] || "Sesi 1/2026";
     document.getElementById("entryDate").value = new Date().toISOString().split("T")[0];
-    document.getElementById("entryUnit").value = state.dropdowns.units[0] || "JHEP (Induk)";
-    document.getElementById("entryTrackingStatus").value = state.dropdowns.statuses[0] || "Kertas Kerja Diluluskan";
-    document.getElementById("entryAmount").value = "";
     document.getElementById("entryTitle").value = "";
     document.getElementById("entryFileNo").value = "";
+    document.getElementById("entryUnit").value = state.dropdowns.units[0] || "JHEP (Induk)";
+    document.getElementById("entryAmount").value = "";
+    document.getElementById("entryTrackingStatus").value = state.dropdowns.statuses[0] || "Kertas Kerja Diluluskan";
+    document.getElementById("entryKertasKerjaUrl").value = "";
+    document.getElementById("entryLaporanUrl").value = "";
     showModal("modalNewEntry");
 }
 
-function openAddFundSourceModal() {
-    openNewActivityModal("MASUK");
-}
-
 function openEditEntryModal(entryId) {
-    const e = state.entries.find(item => item.id === entryId);
-    if (!e) return;
-    populateFundSelectDropdowns();
-    document.getElementById("modalEntryHeading").textContent = "Kemaskini / Edit Perkara";
-    document.getElementById("editingEntryId").value = e.id;
-    document.getElementById("entryFundCode").value = e.fund;
-    document.getElementById("entryType").value = e.type;
-    document.getElementById("entryYear").value = e.year || "2026";
-    document.getElementById("entrySession").value = e.session || "Sesi 1/2026";
-    document.getElementById("entryDate").value = e.date;
-    document.getElementById("entryTitle").value = e.title;
-    document.getElementById("entryFileNo").value = e.fileNo;
-    document.getElementById("entryUnit").value = e.unit;
-    document.getElementById("entryAmount").value = e.type === "MASUK" ? e.masuk : e.keluar;
-    document.getElementById("entryTrackingStatus").value = e.status;
+    renderDropdownFiltersAndDatalists();
+    const item = state.entries.find(e => e.id === entryId);
+    if (!item) return;
+    document.getElementById("editingEntryId").value = item.id;
+    document.getElementById("modalEntryHeading").textContent = "Kemaskini / Edit Perkara Buku Tunai";
+    document.getElementById("entryFundCode").value = item.fund;
+    document.getElementById("entryType").value = item.type;
+    document.getElementById("entryYear").value = item.year || "2026";
+    document.getElementById("entrySession").value = item.session || "Sesi 1/2026";
+    document.getElementById("entryDate").value = item.date;
+    document.getElementById("entryTitle").value = item.title;
+    document.getElementById("entryFileNo").value = item.fileNo;
+    document.getElementById("entryUnit").value = item.unit;
+    document.getElementById("entryAmount").value = item.type === "MASUK" ? item.masuk : item.keluar;
+    document.getElementById("entryTrackingStatus").value = item.status;
+
+    const kkDoc = (item.documents || []).find(d => d.category === "Kertas Kerja");
+    const lapDoc = (item.documents || []).find(d => d.category === "Laporan Pelaksanaan");
+    document.getElementById("entryKertasKerjaUrl").value = kkDoc ? kkDoc.url : "";
+    document.getElementById("entryLaporanUrl").value = lapDoc ? lapDoc.url : "";
     showModal("modalNewEntry");
 }
 
@@ -1698,55 +2208,71 @@ function saveLedgerEntry() {
     const editingId = document.getElementById("editingEntryId").value;
     const fund = document.getElementById("entryFundCode").value;
     const type = document.getElementById("entryType").value;
-    const year = (document.getElementById("entryYear").value || "2026").trim();
-    const session = (document.getElementById("entrySession").value || "Sesi 1/2026").trim();
-    const date = document.getElementById("entryDate").value;
-    const amount = Number(document.getElementById("entryAmount").value || 0);
+    const year = document.getElementById("entryYear").value.trim() || "2026";
+    const session = document.getElementById("entrySession").value.trim() || "Sesi 1/2026";
+    const date = document.getElementById("entryDate").value || new Date().toISOString().split("T")[0];
     const title = document.getElementById("entryTitle").value.trim();
-    const fileNo = document.getElementById("entryFileNo")?.value.trim() || "JHEP/2026/01";
-    const unit = (document.getElementById("entryUnit").value || "JHEP (Induk)").trim();
-    const status = (document.getElementById("entryTrackingStatus").value || "Kertas Kerja Diluluskan").trim();
+    const fileNo = document.getElementById("entryFileNo").value.trim() || "-";
+    const unit = document.getElementById("entryUnit").value.trim() || "JHEP (Induk)";
+    const amount = Number(document.getElementById("entryAmount").value || 0);
+    const status = document.getElementById("entryTrackingStatus").value.trim() || "Kertas Kerja Diluluskan";
+    const kkUrl = document.getElementById("entryKertasKerjaUrl").value.trim();
+    const lapUrl = document.getElementById("entryLaporanUrl").value.trim();
 
     if (!title || amount <= 0) {
-        showToast("Sila isi Perkara dan Amaun.");
+        showToast("Sila lengkapkan Perkara dan Amaun (> 0)");
         return;
     }
 
-    // Jika pengguna menaip Tahun / Sesi / Unit / Status baharu, simpan secara automatik ke dalam senarai dropdown
     ensureCustomDropdownValueSaved("years", year);
     ensureCustomDropdownValueSaved("sessions", session);
     ensureCustomDropdownValueSaved("units", unit);
     ensureCustomDropdownValueSaved("statuses", status);
 
     if (editingId) {
-        const existing = state.entries.find(item => item.id === editingId);
-        if (existing) {
-            existing.fund = fund;
-            existing.type = type;
-            existing.year = year;
-            existing.session = session;
-            existing.date = date;
-            existing.title = title;
-            existing.fileNo = fileNo;
-            existing.unit = unit;
-            existing.masuk = type === "MASUK" ? amount : 0;
-            existing.keluar = type === "KELUAR" ? amount : 0;
-            existing.status = status;
-            existing.timeline = existing.timeline || [];
-            existing.timeline.push({ time: "Dikemas kini", stage: status, note: `Perkara dikemas kini (${formatRM(amount)})`, user: currentUser.name });
+        const item = state.entries.find(e => e.id === editingId);
+        if (item) {
+            item.fund = fund;
+            item.type = type;
+            item.year = year;
+            item.session = session;
+            item.date = date;
+            item.title = title;
+            item.fileNo = fileNo;
+            item.unit = unit;
+            item.masuk = type === "MASUK" ? amount : 0;
+            item.keluar = type === "KELUAR" ? amount : 0;
+            item.status = status;
+            if (!Array.isArray(item.documents)) item.documents = [];
+            if (kkUrl && !item.documents.some(d => d.url === kkUrl)) {
+                item.documents.push({ id: "DOC-" + Date.now() + "1", category: "Kertas Kerja", name: "Kertas Kerja - " + title, url: kkUrl, uploadedAt: new Date().toLocaleDateString("ms-MY"), by: currentUser.name });
+            }
+            if (lapUrl && !item.documents.some(d => d.url === lapUrl)) {
+                item.documents.push({ id: "DOC-" + Date.now() + "2", category: "Laporan Pelaksanaan", name: "Laporan - " + title, url: lapUrl, uploadedAt: new Date().toLocaleDateString("ms-MY"), by: currentUser.name });
+            }
         }
-        showToast("Rekod perkara berjaya dikemas kini.");
+        showToast("Perkara berjaya dikemas kini.");
     } else {
-        const newEntry = {
+        const docs = [];
+        if (kkUrl) docs.push({ id: "DOC-" + Date.now() + "1", category: "Kertas Kerja", name: "Kertas Kerja - " + title, url: kkUrl, uploadedAt: new Date().toLocaleDateString("ms-MY"), by: currentUser.name });
+        if (lapUrl) docs.push({ id: "DOC-" + Date.now() + "2", category: "Laporan Pelaksanaan", name: "Laporan - " + title, url: lapUrl, uploadedAt: new Date().toLocaleDateString("ms-MY"), by: currentUser.name });
+
+        state.entries.push({
             id: "ENT-" + Date.now(),
-            fund, type, year, session, date, title, fileNo, unit,
+            fund,
+            type,
+            year,
+            session,
+            date,
+            title,
+            fileNo,
+            unit,
             masuk: type === "MASUK" ? amount : 0,
             keluar: type === "KELUAR" ? amount : 0,
-            status: type === "MASUK" ? "Selesai & Laporan Lengkap" : status,
-            notes: "",
-            timeline: [{ time: "Baru direkod", stage: "Didaftarkan", note: title, user: currentUser.name }]
-        };
-        state.entries.push(newEntry);
+            status,
+            documents: docs,
+            logs: [{ time: new Date().toLocaleString("ms-MY"), actor: currentUser.name, note: `Direkodkan (${year} - ${session})` }]
+        });
         showToast("Rekod baharu berjaya disimpan.");
     }
 
@@ -1755,66 +2281,141 @@ function saveLedgerEntry() {
     renderAllSheets();
 }
 
+function openDropdownCrudModal(defaultCat) {
+    if (defaultCat) activeDropdownCategory = defaultCat;
+    switchDropdownCategory(activeDropdownCategory);
+    showModal("modalDropdownCrud");
+}
+
+function switchDropdownCategory(cat) {
+    activeDropdownCategory = cat;
+    ["years", "sessions", "units", "statuses"].forEach(c => {
+        const btn = document.getElementById("ddTab-" + c);
+        if (btn) {
+            btn.className = c === cat
+                ? "px-3 py-1.5 rounded-lg font-extrabold bg-indigo-600 text-white"
+                : "px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+        }
+    });
+    renderDropdownCrudList();
+}
+
+function renderDropdownCrudList() {
+    const list = state.dropdowns[activeDropdownCategory] || [];
+    const container = document.getElementById("dropdownOptionsListContainer");
+    if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada item dalam senarai ini.</div>`;
+        return;
+    }
+
+    container.innerHTML = list.map((val, idx) => `
+        <div class="p-2.5 flex items-center justify-between gap-2 hover:bg-slate-50">
+            <input type="text" id="ddEditInput-${idx}" value="${val}" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 bg-white focus:border-indigo-600 focus:outline-none">
+            <div class="flex items-center gap-1.5">
+                <button onclick="saveEditedDropdownOption(${idx})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-check"></i> Simpan Edit
+                </button>
+                <button onclick="deleteDropdownOption(${idx})" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function addNewDropdownOption() {
+    const input = document.getElementById("newDropdownValueInput");
+    const val = (input.value || "").trim();
+    if (!val) {
+        showToast("Sila taip nilai pilihan baharu.");
+        return;
+    }
+    if (state.dropdowns[activeDropdownCategory].includes(val)) {
+        showToast("Pilihan ini sudah wujud dalam senarai.");
+        return;
+    }
+    state.dropdowns[activeDropdownCategory].push(val);
+    if (activeDropdownCategory === "units") {
+        ensureCustomDropdownValueSaved("units", val);
+    }
+    input.value = "";
+    saveState();
+    renderDropdownCrudList();
+    renderAllSheets();
+    showToast(`Pilihan "${val}" ditambah.`);
+}
+
+function saveEditedDropdownOption(idx) {
+    const input = document.getElementById("ddEditInput-" + idx);
+    if (!input) return;
+    const newVal = input.value.trim();
+    const oldVal = state.dropdowns[activeDropdownCategory][idx];
+    if (!newVal) {
+        showToast("Nilai pilihan tidak boleh kosong.");
+        return;
+    }
+    state.dropdowns[activeDropdownCategory][idx] = newVal;
+
+    const fieldMap = { years: "year", sessions: "session", units: "unit", statuses: "status" };
+    const fieldName = fieldMap[activeDropdownCategory];
+    if (fieldName && oldVal !== newVal) {
+        state.entries.forEach(e => {
+            if (e[fieldName] === oldVal) e[fieldName] = newVal;
+        });
+    }
+    if (activeDropdownCategory === "units" && oldVal !== newVal) {
+        if (state.unitAccounts && state.unitAccounts[oldVal]) {
+            state.unitAccounts[newVal] = { ...state.unitAccounts[oldVal], name: newVal };
+            delete state.unitAccounts[oldVal];
+        }
+    }
+
+    saveState();
+    renderDropdownCrudList();
+    renderAllSheets();
+    showToast(`Pilihan dikemas kini kepada "${newVal}".`);
+}
+
+function deleteDropdownOption(idx) {
+    const list = state.dropdowns[activeDropdownCategory];
+    if (!list || list.length <= 1) {
+        showToast("Sekurang-kurangnya satu pilihan perlu dikekalkan.");
+        return;
+    }
+    const removed = list.splice(idx, 1)[0];
+    saveState();
+    renderDropdownCrudList();
+    renderAllSheets();
+    showToast(`Pilihan "${removed}" telah dipadam.`);
+}
+
 function confirmDeleteEntry(entryId) {
-    const e = state.entries.find(item => item.id === entryId);
-    if (!e) return;
-    document.getElementById("confirmDeleteTitle").textContent = "Padam Perkara / Transaksi?";
-    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam rekod <strong>"${e.title}"</strong> berjumlah <strong>${formatRM(e.keluar || e.masuk)}</strong> daripada tabung <strong>${e.fund}</strong>?`;
+    const item = state.entries.find(e => e.id === entryId);
+    if (!item) return;
+    document.getElementById("confirmDeleteTitle").textContent = "Padam Perkara / Rekod Buku Tunai?";
+    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam perkara <strong>"${item.title}"</strong> (${formatRM(item.keluar || item.masuk)}) daripada tabung <strong>${item.fund}</strong>?`;
+    
     const btn = document.getElementById("confirmDeleteBtn");
-    btn.onclick = function() {
-        state.entries = state.entries.filter(item => item.id !== entryId);
-        saveState();
+    btn.onclick = async function() {
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memadam...`;
+        btn.disabled = true;
+        
+        state.entries = state.entries.filter(e => e.id !== entryId);
+        saveState(true); 
+        await syncToGoogleSheet(false);
+        
         closeModal("modalConfirmDelete");
         renderAllSheets();
-        showToast("Perkara telah berjaya dipadam.");
+        showToast("Perkara telah dipadam daripada Buku Tunai.");
+        
+        btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i> Ya, Padam Sekarang`;
+        btn.disabled = false;
     };
     showModal("modalConfirmDelete");
 }
 
-function updateFundBaseAllocation(fundCode, val) {
-    state.funds[fundCode].allocatedMasuk = Math.max(0, Number(val || 0));
-    saveState();
-    renderAllSheets();
-    showToast("Peruntukan diterima dikemas kini.");
-}
-
-function openTrackingDrawer(id) {
-    selectedEntryId = id;
-    const e = state.entries.find(item => item.id === id);
-    if (!e) return;
-    document.getElementById("trkSheetBadge").textContent = e.fund;
-    document.getElementById("trkFileNo").textContent = e.fileNo;
-    document.getElementById("trkTitle").textContent = e.title;
-    document.getElementById("trkYearSession").textContent = `${e.year} / ${e.session}`;
-    document.getElementById("trkDate").textContent = e.date;
-    document.getElementById("trkUnit").textContent = e.unit;
-    document.getElementById("trkAmount").textContent = formatRM(e.keluar || e.masuk);
-    document.getElementById("trkStatusSelect").value = e.status;
-    
-    document.getElementById("trkTimelineList").innerHTML = (e.timeline || []).map(t => `
-        <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-            <strong>${t.stage}</strong> (${t.time}) — ${t.note}
-        </div>
-    `).join("");
-
-    showModal("modalTrackingDrawer");
-}
-
-function saveActivityTrackingUpdate() {
-    const e = state.entries.find(item => item.id === selectedEntryId);
-    if (!e) return;
-    const s = (document.getElementById("trkStatusSelect").value || "Dalam Pelaksanaan").trim();
-    const note = document.getElementById("trkNewNote").value.trim() || `Status: ${s}`;
-    ensureCustomDropdownValueSaved("statuses", s);
-    e.status = s;
-    e.timeline.push({ time: "Hari ini", stage: s, note, user: currentUser.name });
-    saveState();
-    closeModal("modalTrackingDrawer");
-    renderAllSheets();
-    showToast("Tracking dikemas kini.");
-}
-
-// ================= SHEET CRUD MODAL (ADD / EDIT / DELETE TAB SHEET) =================
 function resetSheetCrudForm() {
     document.getElementById("sheetFormBadge").textContent = "+ Tambah Tab Sheet Baharu";
     document.getElementById("sheetOriginalCode").value = "";
@@ -1825,27 +2426,37 @@ function resetSheetCrudForm() {
     document.getElementById("sheetMasukInput").value = "";
 }
 
+function openSheetCrudModal(editCode = null) {
+    resetSheetCrudForm();
+    renderExistingSheetsCrudList();
+    if (editCode && state.funds[editCode]) {
+        populateSheetFormForEdit(editCode);
+    }
+    showModal("modalSheetCrud");
+}
+
+function populateSheetFormForEdit(code) {
+    const f = state.funds[code];
+    if (!f) return;
+    document.getElementById("sheetFormBadge").textContent = `Kemaskini Tab Sheet: ${code}`;
+    document.getElementById("sheetOriginalCode").value = code;
+    document.getElementById("sheetCodeInput").value = f.code;
+    document.getElementById("sheetNameInput").value = f.name;
+    document.getElementById("sheetWaranInput").value = f.waranRef || "";
+    document.getElementById("sheetMasukInput").value = f.allocatedMasuk || 0;
+}
+
 function renderExistingSheetsCrudList() {
     const listEl = document.getElementById("existingSheetsCrudList");
     if (!listEl) return;
     const codes = getFundCodes();
-    if (codes.length === 0) {
-        listEl.innerHTML = `<div class="p-4 text-center text-slate-400">Tiada Tab Sheet. Sila tambah di atas.</div>`;
-        return;
-    }
     listEl.innerHTML = codes.map(code => {
-        const f = state.funds[code];
-        const count = state.entries.filter(e => e.fund === code).length;
+        const s = getSheetSummary(code);
         return `
             <div class="p-3 bg-white hover:bg-slate-50 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-mono font-extrabold text-[11px]">${code}</span>
-                        <strong class="text-slate-900 font-bold">${f.name}</strong>
-                    </div>
-                    <div class="text-[11px] text-slate-500 mt-0.5">
-                        Waran: ${f.waranRef || '-'} · Dana Induk: <strong>${formatRM(f.allocatedMasuk)}</strong> · ${count} Rekod
-                    </div>
+                    <div class="font-extrabold text-slate-900">${s.fundObj.name} <span class="text-xs font-mono text-teal-700">(${code})</span></div>
+                    <div class="text-[11px] text-slate-500">Waran: ${s.fundObj.waranRef || '-'} · Dana Masuk Awal: <strong class="text-emerald-700">${formatRM(s.baseMasuk)}</strong> · Baki: <strong class="text-teal-800">${formatRM(s.bakiSemasa)}</strong></div>
                 </div>
                 <div class="flex items-center gap-1.5">
                     <button onclick="populateSheetFormForEdit('${code}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1">
@@ -1860,97 +2471,432 @@ function renderExistingSheetsCrudList() {
     }).join("");
 }
 
-function populateSheetFormForEdit(code) {
-    const f = state.funds[code];
-    if (!f) return;
-    document.getElementById("sheetFormBadge").textContent = `Kemaskini Tab Sheet: ${code}`;
-    document.getElementById("sheetOriginalCode").value = code;
-    document.getElementById("sheetCodeInput").value = f.code;
-    document.getElementById("sheetNameInput").value = f.name;
-    document.getElementById("sheetWaranInput").value = f.waranRef || "";
-    document.getElementById("sheetMasukInput").value = f.allocatedMasuk || 0;
-}
-
-function openSheetCrudModal(editCode = null) {
-    resetSheetCrudForm();
-    renderExistingSheetsCrudList();
-    if (editCode && state.funds[editCode]) {
-        populateSheetFormForEdit(editCode);
-    }
-    showModal("modalSheetCrud");
-}
-
 function saveSheetCrudForm() {
     const origCode = document.getElementById("sheetOriginalCode").value.trim();
-    const code = document.getElementById("sheetCodeInput").value.trim().toUpperCase().replace(/\s+/g, "_");
-    const name = document.getElementById("sheetNameInput").value.trim();
-    const waranRef = document.getElementById("sheetWaranInput").value.trim() || "Waran Peruntukan";
-    const masuk = Number(document.getElementById("sheetMasukInput").value || 0);
+    const rawCode = document.getElementById("sheetCodeInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+    const name = document.getElementById("sheetNameInput").value.trim().toUpperCase();
+    const waranRef = document.getElementById("sheetWaranInput").value.trim() || "-";
+    const allocatedMasuk = Math.max(0, Number(document.getElementById("sheetMasukInput").value || 0));
 
-    if (!code || !name) {
+    if (!rawCode || !name) {
         showToast("Sila isi Kod Tab dan Nama Penuh Tab Sheet.");
         return;
     }
 
-    if (origCode && origCode !== code) {
+    if (origCode && origCode !== rawCode) {
         delete state.funds[origCode];
         state.entries.forEach(e => {
-            if (e.fund === origCode) e.fund = code;
+            if (e.fund === origCode) e.fund = rawCode;
         });
-        if (activeSheet === origCode) activeSheet = code;
+        if (activeSheet === origCode) activeSheet = rawCode;
     }
 
-    state.funds[code] = { code, name, waranRef, allocatedMasuk: masuk };
+    state.funds[rawCode] = {
+        code: rawCode,
+        name,
+        waranRef,
+        allocatedMasuk
+    };
+
     saveState();
     resetSheetCrudForm();
     renderExistingSheetsCrudList();
     renderAllSheets();
-    showToast(`Tab Sheet ${code} berjaya disimpan.`);
+    showToast(`Tab Sheet "${name}" (${rawCode}) telah disimpan.`);
 }
 
-function confirmDeleteSheet(code) {
-    const f = state.funds[code];
-    if (!f) return;
+function confirmDeleteSheet(fundCode) {
     const codes = getFundCodes();
     if (codes.length <= 1) {
         showToast("Sekurang-kurangnya satu Tab Sheet perlu dikekalkan.");
         return;
     }
-    const relatedCount = state.entries.filter(e => e.fund === code).length;
+    const f = state.funds[fundCode];
+    if (!f) return;
+    const count = state.entries.filter(e => e.fund === fundCode).length;
+
     document.getElementById("confirmDeleteTitle").textContent = `Padam Tab Sheet "${f.name}"?`;
-    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam Tab Sheet <strong>${f.name} (${code})</strong> bersama <strong>${relatedCount} rekod transaksi</strong> di dalamnya?`;
+    document.getElementById("confirmDeleteDesc").innerHTML = `Adakah anda pasti mahu memadam Tab Sheet <strong>${f.name} (${fundCode})</strong> bersama <strong>${count} rekod transaksi</strong> di dalamnya?`;
+    
     const btn = document.getElementById("confirmDeleteBtn");
-    btn.onclick = function() {
-        delete state.funds[code];
-        state.entries = state.entries.filter(e => e.fund !== code);
-        if (activeSheet === code) {
-            activeSheet = "PERUNTUKAN";
-            document.getElementById("sheet-PERUNTUKAN").classList.remove("hidden");
-            document.getElementById("sheet-LEDGER").classList.add("hidden");
-        }
-        saveState();
+    btn.onclick = async function() {
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memadam...`;
+        btn.disabled = true;
+
+        delete state.funds[fundCode];
+        state.entries = state.entries.filter(e => e.fund !== fundCode);
+        if (activeSheet === fundCode) activeSheet = "PERUNTUKAN";
+        
+        saveState(true);
+        await syncToGoogleSheet(false);
+        
         closeModal("modalConfirmDelete");
-        closeModal("modalSheetCrud");
-        renderAllSheets();
-        showToast(`Tab Sheet ${code} telah dipadam.`);
+        renderExistingSheetsCrudList();
+        switchSheetTab(activeSheet);
+        showToast(`Tab Sheet "${f.name}" telah dipadam.`);
+
+        btn.innerHTML = `<i class="fa-solid fa-trash-can mr-1"></i> Ya, Padam Sekarang`;
+        btn.disabled = false;
     };
     showModal("modalConfirmDelete");
 }
 
-function applyRoleLogin() {
-    const r = document.getElementById("roleSelectInput").value;
-    currentUser.role = r;
-    currentUser.name = r === "ADMIN" ? "Super Admin" : "Staf Unit";
-    document.getElementById("currentRoleBadge").textContent = r;
-    document.getElementById("currentUserName").textContent = currentUser.name;
-    closeModal("loginModal");
+function openTrackingDrawer(entryId, focusUpload = false) {
+    selectedEntryId = entryId;
+    const item = state.entries.find(e => e.id === entryId);
+    if (!item) return;
+    if (!Array.isArray(item.documents)) item.documents = [];
+
+    document.getElementById("trkSheetBadge").textContent = item.fund;
+    document.getElementById("trkFileNo").textContent = item.fileNo;
+    document.getElementById("trkTitle").textContent = item.title;
+    document.getElementById("trkYearSession").textContent = `${item.year} (${item.session})`;
+    document.getElementById("trkDate").textContent = item.date;
+    document.getElementById("trkUnit").textContent = item.unit;
+    document.getElementById("trkAmount").textContent = formatRM(item.keluar || item.masuk);
+    document.getElementById("trkStatusSelect").value = item.status;
+
+    document.getElementById("driveFileInput").value = "";
+    document.getElementById("driveManualUrlInput").value = "";
+    document.getElementById("driveDocTitleInput").value = "";
+
+    renderTrackingDocumentsList(item);
+
+    document.getElementById("trkTimelineList").innerHTML = (item.logs || []).slice().reverse().map(l => `
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-800">${l.note}</div>
+            <div class="text-[10px] text-slate-400">${l.time} · Oleh ${l.actor}</div>
+        </div>
+    `).join("");
+
+    showModal("modalTrackingDrawer");
+    if (focusUpload) {
+        setTimeout(() => document.getElementById("driveFileInput")?.focus(), 150);
+    }
+}
+
+function renderTrackingDocumentsList(item) {
+    const docs = item.documents || [];
+    document.getElementById("trkDocsCountBadge").textContent = `${docs.length} Dokumen`;
+    const listEl = document.getElementById("trkDocumentsList");
+    if (!listEl) return;
+
+    if (docs.length === 0) {
+        listEl.innerHTML = `<div class="p-3 rounded-lg bg-white border border-slate-200 text-slate-400 text-center">Belum ada Kertas Kerja atau Laporan dimuat naik bagi aktiviti ini.</div>`;
+        return;
+    }
+
+    listEl.innerHTML = docs.map(d => `
+        <div class="p-2.5 rounded-lg bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-2 hover:bg-slate-50">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-brands fa-google-drive text-emerald-600 text-base"></i>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">${d.category}</span>
+                        <a href="${d.url}" target="_blank" class="font-bold text-slate-900 hover:text-teal-700 hover:underline">${d.name}</a>
+                    </div>
+                    <div class="text-[10px] text-slate-400">Dimuat naik: ${d.uploadedAt || '-'} · Oleh ${d.by || 'Staf'}</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <a href="${d.url}" target="_blank" download="${d.name}" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-2.5 py-1 rounded text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-up-right-from-square"></i> Buka Drive
+                </a>
+                <button onclick="deleteTrackingDocument('${d.id}')" class="bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-bold px-2 py-1 rounded text-[11px] transition" title="Padam Dokumen">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result || "";
+            const base64Clean = result.includes(",") ? result.split(",")[1] : result;
+            resolve({ base64Clean, dataUrl: result });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadDocumentToGoogleDrive() {
+    const item = state.entries.find(e => e.id === selectedEntryId);
+    if (!item) return;
+    if (!Array.isArray(item.documents)) item.documents = [];
+
+    const category = document.getElementById("driveDocCategory").value;
+    const fileEl = document.getElementById("driveFileInput");
+    const manualUrl = document.getElementById("driveManualUrlInput").value.trim();
+    const customTitle = document.getElementById("driveDocTitleInput").value.trim();
+    const file = fileEl.files && fileEl.files[0];
+
+    if (!file && !manualUrl) {
+        showToast("Sila pilih fail untuk dimuat naik atau masukkan pautan Google Drive.");
+        return;
+    }
+
+    const btn = document.getElementById("btnUploadDriveNow");
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memuat naik...`;
+
+    let finalUrl = manualUrl;
+    let finalName = customTitle || (file ? file.name : `${category} - ${item.title}`);
+
+    try {
+        if (file) {
+            const { base64Clean, dataUrl } = await readFileAsBase64(file);
+            const gasUrl = getGasWebAppUrl();
+
+            if (gasUrl) {
+                const res = await fetch(gasUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "UPLOAD_DRIVE_FILE",
+                        year: item.year,
+                        fileName: finalName,
+                        mimeType: file.type || "application/pdf",
+                        base64Data: base64Clean
+                    })
+                });
+                const data = await res.json();
+                if (data && data.ok && data.fileUrl) {
+                    finalUrl = data.fileUrl;
+                    showToast(`${category} berjaya dimuat naik ke Google Drive!`);
+                } else {
+                    finalUrl = dataUrl;
+                    showToast("Disimpan secara lokal (Sila kemas kini Code.gs untuk simpanan terus ke Drive).");
+                }
+            } else {
+                finalUrl = dataUrl;
+                showToast(`${category} disimpan! Sambungkan Web App URL untuk auto-simpan ke folder Google Drive.`);
+            }
+        } else {
+            showToast(`Pautan ${category} berjaya ditambah!`);
+        }
+
+        item.documents.push({
+            id: "DOC-" + Date.now(),
+            category,
+            name: finalName,
+            url: finalUrl,
+            uploadedAt: new Date().toLocaleString("ms-MY"),
+            by: currentUser.name
+        });
+
+        item.logs.push({
+            time: new Date().toLocaleString("ms-MY"),
+            actor: currentUser.name,
+            note: `Muat naik ${category}: ${finalName}`
+        });
+
+        saveState();
+        openTrackingDrawer(selectedEntryId);
+        renderAllSheets();
+    } catch (err) {
+        showToast("Ralat semasa memuat naik dokumen.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+
+function deleteTrackingDocument(docId) {
+    const item = state.entries.find(e => e.id === selectedEntryId);
+    if (!item || !Array.isArray(item.documents)) return;
+    const target = item.documents.find(d => d.id === docId);
+    item.documents = item.documents.filter(d => d.id !== docId);
+    if (target) {
+        item.logs.push({
+            time: new Date().toLocaleString("ms-MY"),
+            actor: currentUser.name,
+            note: `Padam dokumen ${target.category}: ${target.name}`
+        });
+    }
+    saveState();
+    renderTrackingDocumentsList(item);
     renderAllSheets();
-    showToast(`Log masuk sebagai ${currentUser.name}`);
+    showToast("Dokumen telah dipadam.");
+}
+
+function saveActivityTrackingUpdate() {
+    const item = state.entries.find(e => e.id === selectedEntryId);
+    if (!item) return;
+    const newStatus = document.getElementById("trkStatusSelect").value.trim() || item.status;
+    const note = document.getElementById("trkNewNote").value.trim() || `Status dikemas kini: ${newStatus}`;
+
+    ensureCustomDropdownValueSaved("statuses", newStatus);
+    item.status = newStatus;
+    item.logs.push({ time: new Date().toLocaleString("ms-MY"), actor: currentUser.name, note });
+    document.getElementById("trkNewNote").value = "";
+    saveState();
+    openTrackingDrawer(selectedEntryId);
+    renderAllSheets();
+    showToast("Status tracking berjaya dikemas kini.");
+}
+
+function openExportReportModal() {
+    const f = getActiveFilters();
+    document.getElementById("exportReportInfoSummary").textContent =
+        `Tahun: ${f.year === 'ALL' ? 'Semua Tahun' : f.year} | Sesi: ${f.session === 'ALL' ? 'Semua Sesi' : f.session} | Jabatan: ${f.unit === 'ALL' ? 'Semua Jabatan' : f.unit}`;
+    showModal("modalExportReport");
+}
+
+function generateReportHTMLContent() {
+    const f = getActiveFilters();
+    const codes = getFundCodes();
+    const filteredEntries = filterEntriesByGlobal(state.entries);
+
+    const fundRows = codes.map((c, i) => {
+        const s = getSheetSummary(c);
+        return `
+            <tr>
+                <td style="border:1px solid #333;padding:6px;text-align:center;">${i + 1}</td>
+                <td style="border:1px solid #333;padding:6px;"><b>${s.fundObj.name}</b> (${c})</td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;">${formatRM(s.totalMasuk)}</td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;">${formatRM(s.totalKeluar)}</td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;"><b>${formatRM(s.bakiSemasa)}</b></td>
+            </tr>
+        `;
+    }).join("");
+
+    const unitNames = getAllUnitNames();
+    const unitRows = unitNames.map((uName, i) => {
+        const u = getUnitSummary(uName);
+        return `
+            <tr>
+                <td style="border:1px solid #333;padding:6px;text-align:center;">${i + 1}</td>
+                <td style="border:1px solid #333;padding:6px;"><b>${uName}</b></td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;">${formatRM(u.totalTerima)}</td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;">${formatRM(u.totalBelanja)}</td>
+                <td style="border:1px solid #333;padding:6px;text-align:right;"><b>${formatRM(u.bakiSemasa)}</b></td>
+            </tr>
+        `;
+    }).join("");
+
+    const txRows = filteredEntries.map((r, i) => `
+        <tr>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${i + 1}</td>
+            <td style="border:1px solid #333;padding:6px;">${r.fund}</td>
+            <td style="border:1px solid #333;padding:6px;">${r.year} (${r.session})</td>
+            <td style="border:1px solid #333;padding:6px;">${r.date}</td>
+            <td style="border:1px solid #333;padding:6px;"><b>${r.title}</b></td>
+            <td style="border:1px solid #333;padding:6px;">${r.unit}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:right;">${formatRM(r.keluar || r.masuk)}</td>
+            <td style="border:1px solid #333;padding:6px;">${r.status}</td>
+        </tr>
+    `).join("");
+
+    return `
+        <div style="font-family:Arial,sans-serif;padding:20px;color:#111;">
+            <h2 style="margin:0;text-transform:uppercase;">LAPORAN KEWANGAN & AKTIVITI JABATAN HAL EHWAL PELAJAR (JHEP)</h2>
+            <p style="font-size:12px;color:#444;">Saringan: Tahun (${f.year}) | Sesi (${f.session}) | Jabatan (${f.unit}) | Dijana: ${new Date().toLocaleDateString("ms-MY")}</p>
+            <hr style="margin:12px 0;"/>
+            <h3>1. Ringkasan Kedudukan Mengikut Tabung (Berasingan)</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px;">
+                <thead>
+                    <tr style="background:#e2e8f0;">
+                        <th style="border:1px solid #333;padding:6px;">BIL</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:left;">SUMBER TABUNG</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">DANA MASUK</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">BELANJA</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">BAKI SEMASA</th>
+                    </tr>
+                </thead>
+                <tbody>${fundRows}</tbody>
+            </table>
+
+            <h3>2. Ringkasan Terima & Belanja Mengikut Jabatan / Unit</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px;">
+                <thead>
+                    <tr style="background:#e2e8f0;">
+                        <th style="border:1px solid #333;padding:6px;">BIL</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:left;">JABATAN / UNIT</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">JUMLAH TERIMA</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">JUMLAH BELANJA</th>
+                        <th style="border:1px solid #333;padding:6px;text-align:right;">BAKI UNIT</th>
+                    </tr>
+                </thead>
+                <tbody>${unitRows}</tbody>
+            </table>
+
+            <h3>3. Senarai Transaksi & Aktiviti Mengikut Saringan</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr style="background:#e2e8f0;">
+                        <th style="border:1px solid #333;padding:6px;">BIL</th>
+                        <th style="border:1px solid #333;padding:6px;">TABUNG</th>
+                        <th style="border:1px solid #333;padding:6px;">TAHUN / SESI</th>
+                        <th style="border:1px solid #333;padding:6px;">TARIKH</th>
+                        <th style="border:1px solid #333;padding:6px;">AKTIVITI</th>
+                        <th style="border:1px solid #333;padding:6px;">UNIT</th>
+                        <th style="border:1px solid #333;padding:6px;">AMAUN</th>
+                        <th style="border:1px solid #333;padding:6px;">STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>${txRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function executeExportReport() {
+    const format = document.getElementById("exportFormatSelect").value;
+    const htmlContent = generateReportHTMLContent();
+    closeModal("modalExportReport");
+
+    if (format === "PDF") {
+        const printArea = document.getElementById("printArea");
+        printArea.innerHTML = htmlContent;
+        printArea.classList.remove("hidden");
+        window.print();
+        setTimeout(() => printArea.classList.add("hidden"), 600);
+        return;
+    }
+
+    if (format === "WORD") {
+        const blob = new Blob(['\ufeff', `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`], { type: "application/msword" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Laporan_IDANA_JHEP_${Date.now()}.doc`;
+        link.click();
+        showToast("Laporan Word (.doc) telah dimuat turun.");
+        return;
+    }
+
+    if (format === "EXCEL") {
+        const blob = new Blob(['\ufeff', `<html><head><meta charset="utf-8"></head><body>${htmlContent}</body></html>`], { type: "application/vnd.ms-excel" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Laporan_IDANA_JHEP_${Date.now()}.xls`;
+        link.click();
+        showToast("Laporan Excel (.xls) telah dimuat turun.");
+    }
 }
 
 function openLoginModal() { showModal("loginModal"); }
-function showModal(id) { document.getElementById(id).classList.remove("hidden"); document.getElementById(id).classList.add("flex"); }
-function closeModal(id) { document.getElementById(id).classList.add("hidden"); document.getElementById(id).classList.remove("flex"); }
+function applyRoleLogin() {
+    const role = document.getElementById("roleSelectInput").value;
+    currentUser = role === "ADMIN" ? { role: "ADMIN", name: "Super Admin" } : { role: "STAF", name: "Penyelaras Unit" };
+    document.getElementById("currentRoleBadge").textContent = currentUser.role;
+    document.getElementById("currentUserName").textContent = currentUser.name;
+    closeModal("loginModal");
+    renderAllSheets();
+}
+
+function showModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove("hidden"); el.classList.add("flex"); }
+}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add("hidden"); el.classList.remove("flex"); }
+}
 function showToast(msg) {
     const t = document.getElementById("toast");
     document.getElementById("toastText").textContent = msg;
@@ -1958,13 +2904,12 @@ function showToast(msg) {
     setTimeout(() => { t.classList.add("hidden"); t.classList.remove("flex"); }, 3000);
 }
 
-window.onload = function() {
+window.addEventListener("DOMContentLoaded", () => {
     renderAllSheets();
-    updateCloudStatusBadge(getGasWebAppUrl() ? "Tersambung" : "Setup Google Sheet", getGasWebAppUrl() ? "SUCCESS" : "READY");
     if (getGasWebAppUrl()) {
         syncFromGoogleSheet(false);
     }
-};
+});
 </script>
 </body>
 </html>
